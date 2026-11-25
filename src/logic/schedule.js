@@ -1,0 +1,59 @@
+// Schedule helpers: active program, per-task time/water/meal lookups, time formatting.
+import { PROGRAMS } from "../data/programs.js";
+import { state } from "../state.js";
+
+export function getActiveProgram() {
+  return PROGRAMS[state.dayMode] || PROGRAMS.gym;
+}
+
+export function getTaskWater(taskObj) {
+  if (!taskObj) return 0;
+  const key = `${state.dayMode}_${taskObj.id}`;
+  if (typeof state.customWater[key] === "number") return state.customWater[key];
+  return taskObj.water || 0;
+}
+
+export function getTaskMealItems(taskObj) {
+  if (!taskObj || !taskObj.defaultItems) return null;
+  const key = `${state.dayMode}_${taskObj.id}`;
+  return state.customMeals[key] || taskObj.defaultItems;
+}
+
+export function formatItemsSummary(items) {
+  return items.map(it => `${it.name} (${it.grams}غ)`).join(" + ");
+}
+
+export function getTaskMins(id) {
+  if (typeof state.taskTimes[id] === "number") return state.taskTimes[id];
+  const t = getActiveProgram().tasks.find(x => x.id === id);
+  return t ? t.baseMins : 0;
+}
+
+export function formatMinsArabic(totalMins) {
+  const norm = ((totalMins % 1440) + 1440) % 1440;
+  const h24 = Math.floor(norm / 60);
+  const m = norm % 60;
+  let period = "ص";
+  if (h24 >= 12 && h24 < 15) period = "ظ";
+  else if (h24 >= 15 && h24 < 18) period = "ع";
+  else if (h24 >= 18) period = "م";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+export function minsToHHMM(totalMins) {
+  const norm = ((totalMins % 1440) + 1440) % 1440;
+  const h = Math.floor(norm / 60);
+  const m = norm % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+export function hhmmToMins(str) {
+  const [h, m] = str.split(":").map(Number);
+  return h * 60 + m;
+}
+
+export function getNowMins() {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}

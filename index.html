@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6ecda" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f17" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>برنامجي الصحي | متابعة ذكية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Aref+Ruqaa:wght@700&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=2" />
+  <link rel="apple-touch-icon" href="./icon-192.png?v=2" />
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card: #131b2b;
+      --card-2: #1a2438;
+      --border: #25324b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.15);
+      --blue: #38bdf8;
+      --blue-dim: rgba(56, 189, 248, 0.15);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.15);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, 0.15);
+      --purple: #a78bfa;
+      --purple-dim: rgba(167, 139, 250, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 88px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    /* Top Alerts & Cloud Sync Strip */
+    .alert-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .strip-btn {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 6px;
+      border-radius: 11px;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .strip-btn.warn {
+      background: var(--amber-dim);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+    }
+
+    .strip-btn.active {
+      background: var(--green-dim);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--green);
+    }
+
+    .strip-btn.blue {
+      background: var(--blue-dim);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--blue);
+    }
+
+    /* Header & History Navigator */
+    .header {
+      background: var(--card);
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #090d14;
+      padding: 5px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      gap: 6px;
+    }
+
+    .date-nav-btn {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .date-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .date-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--blue);
+      text-align: center;
+      flex: 1;
+    }
+
+    .mode-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: #090d14;
+      padding: 4px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 7px 4px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: var(--card-2);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    /* Next Station Focus Card */
+    .next-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(56, 189, 248, 0.1));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .next-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .next-badge {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--green);
+      background: rgba(16, 185, 129, 0.18);
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    .next-countdown {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--amber);
+    }
+
+    .next-title {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .next-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .next-actions {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Progress Bars */
+    .progress-wrap {
+      width: 100%;
+      height: 10px;
+      background: #090d14;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      transition: width 0.3s ease;
+      border-radius: 999px;
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      border-radius: 11px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      color: var(--text);
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-blue {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #062118;
+      border: none;
+    }
+
+    .btn-red {
+      background: var(--red-dim);
+      color: var(--red);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-amber {
+      background: var(--amber-dim);
+      color: var(--amber);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-purple {
+      background: var(--purple-dim);
+      color: var(--purple);
+      border-color: rgba(167, 139, 250, 0.35);
+    }
+
+    .btn-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .btn-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    /* Water Lock */
+    .lock-box {
+      text-align: center;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .lock-open {
+      background: var(--green-dim);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--green);
+    }
+
+    .lock-eating {
+      background: var(--amber-dim);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: var(--amber);
+    }
+
+    .lock-closed {
+      background: var(--red-dim);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--red);
+    }
+
+    .timer-display {
+      font-size: 30px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      margin: 2px 0;
+    }
+
+    .timer-sub {
+      font-size: 11px;
+      opacity: 0.9;
+      font-weight: 700;
+    }
+
+    /* Checklist */
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 10px;
+      background: var(--card-2);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .task-item.meal-task {
+      border-right: 3px solid var(--green);
+    }
+
+    .task-item.prayer-task {
+      border-right: 3px solid var(--purple);
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .task-item.done {
+      opacity: 0.56;
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .task-item.done .task-text {
+      text-decoration: line-through;
+    }
+
+    .task-item.highlight-pulse {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    }
+
+    .checkbox {
+      width: 25px;
+      height: 25px;
+      border-radius: 7px;
+      border: 2px solid var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 1px;
+      cursor: pointer;
+    }
+
+    .task-item.done .checkbox {
+      background: var(--green);
+      border-color: var(--green);
+      color: #062118;
+    }
+
+    .time-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .task-time {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--blue);
+      background: var(--blue-dim);
+      padding: 3px 7px;
+      border-radius: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px dashed rgba(56, 189, 248, 0.45);
+    }
+
+    .task-time.snoozed {
+      color: var(--amber);
+      background: var(--amber-dim);
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+
+    .sys-alarm-link {
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      background: #090d14;
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    .task-body {
+      flex: 1;
+    }
+
+    .task-text {
+      font-size: 13px;
+      font-weight: 700;
+      display: block;
+      cursor: pointer;
+    }
+
+    .task-sub {
+      font-size: 11px;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .task-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+      align-items: center;
+    }
+
+    .pill-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .pill-lock {
+      color: var(--red);
+      background: var(--red-dim);
+    }
+
+    .pill-cal {
+      color: var(--green);
+      background: var(--green-dim);
+    }
+
+    .edit-meal-btn {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--amber);
+      background: var(--amber-dim);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .edit-water-btn {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--blue);
+      background: var(--blue-dim);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 2px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Inputs */
+    select,
+    input,
+    textarea {
+      width: 100%;
+      background: #090d14;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 11px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--green);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .form-row-eq {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* Category Switch */
+    .cat-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #090d14;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .cat-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 8px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .cat-btn.active {
+      background: var(--card-2);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Macros Summary */
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .macro-box {
+      background: var(--card-2);
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .macro-val {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .macro-lbl {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Meal Log */
+    .meal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 10px;
+      background: var(--card-2);
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--red);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0 6px;
+    }
+
+    /* Chart Box */
+    .chart-wrap {
+      background: #090d14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    /* Bottom Nav */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0f1623;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 4px 12px;
+      z-index: 50;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .nav-btn.active {
+      color: var(--green);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .preview-pill {
+      font-size: 12px;
+      color: var(--green);
+      background: var(--green-dim);
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: #062118;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      z-index: 250;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.9);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 200;
+      overflow-y: auto;
+    }
+
+    .modal-card {
+      background: var(--card);
+      border: 2px solid var(--amber);
+      border-radius: 20px;
+      padding: 18px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .modal-card.pulse {
+      animation: pulseBorder 1.5s infinite;
+    }
+
+    @keyframes pulseBorder {
+
+      0%,
+      100% {
+        border-color: var(--amber);
+      }
+
+      50% {
+        border-color: var(--green);
+      }
+    }
+
+    .modal-icon {
+      font-size: 40px;
+      margin-bottom: 6px;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .modal-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .ing-row {
+      display: grid;
+      grid-template-columns: 2fr 78px 28px;
+      gap: 6px;
+      align-items: center;
+      background: var(--card-2);
+      padding: 7px 9px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      text-align: right;
+      font-size: 12px;
+    }
+
+    .ing-row input {
+      padding: 6px 8px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .preset-ml-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .code-box {
+      background: #060910;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #a5f3fc;
+      text-align: left;
+      direction: ltr;
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre;
+      margin-top: 8px;
+    }
+
+    /* ===== ثيم أخضر/ذهبي: فاتح افتراضياً، وليلي تلقائياً مع الجوال ===== */
+    :root {
+      color-scheme: light dark;
+      --bg: #f6ecda;
+      --card: #fffaf0;
+      --card-2: #f6eddb;
+      --inset: #efe3cb;
+      --border: #e6d7b8;
+      --text: #1d3a2f;
+      --muted: #8a7b5e;
+      --green: #0f7a5a;
+      --green-dim: rgba(15, 122, 90, .12);
+      --blue: #1d6aa8;
+      --blue-dim: rgba(29, 106, 168, .12);
+      --red: #c0392b;
+      --red-dim: rgba(192, 57, 43, .10);
+      --amber: #a8741a;
+      --amber-dim: rgba(184, 147, 63, .18);
+      --purple: #6b4fb8;
+      --purple-dim: rgba(107, 79, 184, .12);
+      --gold: #b8933f;
+      --on-green: #fff;
+      --shadow: 0 6px 18px rgba(120, 90, 30, .10);
+      --nav-bg: rgba(255, 250, 240, .88);
+      --glow-1: rgba(184, 147, 63, .20);
+      --glow-2: rgba(15, 122, 90, .08);
+      --overlay: rgba(29, 58, 47, .55);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f17;
+        --card: #131b2b;
+        --card-2: #1a2438;
+        --inset: #090d14;
+        --border: #25324b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --green: #10b981;
+        --green-dim: rgba(16, 185, 129, .15);
+        --blue: #38bdf8;
+        --blue-dim: rgba(56, 189, 248, .15);
+        --red: #ef4444;
+        --red-dim: rgba(239, 68, 68, .15);
+        --amber: #f59e0b;
+        --amber-dim: rgba(245, 158, 11, .15);
+        --purple: #a78bfa;
+        --purple-dim: rgba(167, 139, 250, .15);
+        --gold: #d4b25c;
+        --on-green: #062118;
+        --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+        --nav-bg: rgba(15, 22, 35, .88);
+        --glow-1: rgba(212, 178, 92, .10);
+        --glow-2: rgba(16, 185, 129, .08);
+        --overlay: rgba(5, 8, 15, .88);
+      }
+    }
+
+    * {
+      font-family: 'Tajawal', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    body {
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23b8933f' stroke-opacity='.10'%3E%3Crect x='20' y='20' width='40' height='40'/%3E%3Crect x='20' y='20' width='40' height='40' transform='rotate(45 40 40)'/%3E%3C/g%3E%3C/svg%3E"),
+        radial-gradient(circle at 85% -10%, var(--glow-1), transparent 45%),
+        radial-gradient(circle at 0% 30%, var(--glow-2), transparent 40%),
+        var(--bg);
+      background-attachment: fixed;
+      padding-bottom: 112px;
+    }
+
+    .card,
+    .header {
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .header h1 {
+      font-family: 'Aref Ruqaa', 'Tajawal', serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--green);
+    }
+
+    .card-title {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .card-title>span:first-child {
+      border-inline-start: 4px solid var(--gold);
+      padding-inline-start: 8px;
+    }
+
+    .date-label {
+      color: var(--green);
+    }
+
+    .task-sub {
+      font-size: 12px;
+    }
+
+    .task-time {
+      padding: 5px 9px;
+    }
+
+    .date-nav,
+    .mode-pills,
+    .cat-switch,
+    .progress-wrap,
+    .chart-wrap,
+    select,
+    input,
+    textarea,
+    .sys-alarm-link {
+      background: var(--inset);
+      color: var(--text);
+    }
+
+    .sys-alarm-link {
+      color: var(--muted);
+    }
+
+    [style*="#090d14"] {
+      background: var(--inset) !important;
+    }
+
+    .mode-btn.active,
+    .cat-btn.active {
+      background: var(--card);
+      color: var(--green);
+      border-color: var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    .modal-overlay {
+      background: var(--overlay);
+    }
+
+    .btn-green,
+    .toast,
+    .task-item.done .checkbox {
+      color: var(--on-green);
+    }
+
+    .next-card {
+      background: linear-gradient(180deg, #1d4f80 0%, #0f2742 55%, #0a1622 100%);
+      border: none;
+      border-radius: 24px;
+      padding: 16px;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(15, 39, 66, .35);
+    }
+
+    .next-title {
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .next-sub {
+      color: #b9cbe0;
+      font-size: 12px;
+    }
+
+    .next-countdown {
+      color: #35e0a6;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .next-badge {
+      background: rgba(53, 224, 166, .18);
+      color: #35e0a6;
+    }
+
+    .next-card .btn-blue {
+      background: rgba(255, 255, 255, .12);
+      color: #fff;
+      border-color: rgba(255, 255, 255, .25);
+    }
+
+    .nav {
+      left: 12px;
+      right: 12px;
+      max-width: 520px;
+      margin: 0 auto;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      padding: 8px 6px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--nav-bg);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    }
+
+    .nav-btn {
+      color: var(--muted);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      transition: .2s;
+    }
+
+    .nav-btn:not(.active) .nav-icon {
+      filter: grayscale(1);
+      opacity: .55;
+    }
+
+    .nav-btn.active {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .nav-btn.active .nav-icon {
+      background: var(--green-dim);
+      border-radius: 14px;
+      padding: 2px 16px;
+    }
+
+    #weightChartBox text[fill="#f1f5f9"] {
+      fill: var(--text);
+    }
+
+    #weightChartBox text[fill="#94a3b8"] {
+      fill: var(--muted);
+    }
+
+    #weightChartBox text[fill="#f59e0b"] {
+      fill: var(--amber);
+    }
+
+    #weightChartBox circle {
+      stroke: var(--card);
+    }
+
+    .checks-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .skipbox {
+      width: 25px;
+      height: 25px;
+      border-radius: 7px;
+      border: 2px solid var(--red);
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      opacity: .55;
+    }
+
+    .task-item.skipped {
+      opacity: .5;
+      border-color: rgba(239, 68, 68, .4);
+    }
+
+    .task-item.skipped .task-text,
+    .task-item.skipped .task-sub {
+      text-decoration: line-through;
+      text-decoration-color: var(--red);
+      text-decoration-thickness: 2px;
+    }
+
+    .task-item.skipped .skipbox {
+      background: var(--red);
+      color: #fff;
+      opacity: 1;
+    }
+
+
+    /* القيم الغذائية */
+    .nutr-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .nutr-box {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .nutr-val {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .nutr-goal {
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .nutr-box.over {
+      border-color: rgba(239, 68, 68, .55);
+    }
+
+    .nutr-box.over .nutr-val {
+      color: var(--red);
+    }
+
+    .nutr-box.ok .nutr-val {
+      color: var(--green);
+    }
+  
+    /* Delegated actions: iOS Safari only dispatches click on non-interactive elements when they look clickable */
+    [data-action] { cursor: pointer; }
+  </style>
+</head>
+
+<body>
+
+  <div id="toast" class="toast">تم الحفظ</div>
+
+  <!-- 1. Repeating Alarm Modal -->
+  <div id="alarmModal" class="modal-overlay">
+    <div class="modal-card pulse">
+      <div class="modal-icon" id="alarmIcon">⏰</div>
+      <div class="modal-title" id="alarmTitle">موعد المهمة</div>
+      <div class="modal-desc" id="alarmDesc">تفاصيل المهمة</div>
+      <div id="alarmTaskActions" class="btn-grid-2">
+        <button class="btn btn-green" style="padding:13px; font-size:15px;" data-action="confirm-alarm-done">✅ تم
+          الآن</button>
+        <button class="btn btn-amber" style="padding:13px; font-size:15px;" data-action="snooze-alarm5">💤 غفوة 5
+          د</button>
+      </div>
+      <div id="alarmLockActions" style="display:none;">
+        <button class="btn btn-green" style="width:100%; padding:13px; font-size:15px;" data-action="dismiss-lock-alarm">✅
+          فهمت (إيقاف الصوت)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Manual Time Edit Modal -->
+  <div id="timeEditModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--blue);">
+      <div class="modal-title" id="editTaskTitle">تعديل وقت المهمة</div>
+      <div class="modal-desc">اختر الساعة الفعلية (إذا أكلت بوقتك ونسيت تضغط، اتركها كما هي واضغط حفظ حتى يحسب باقي قفل
+        المي بدون تزحيف):</div>
+      <input type="time" id="editTimeInput"
+        style="font-size:20px; font-weight:800; text-align:center; margin-bottom:14px;" />
+      <div class="btn-grid-2">
+        <button class="btn btn-green" data-action="save-edited-time">حفظ الوقت</button>
+        <button class="btn" data-action="close-time-edit">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Meal Customizer & Saved Presets Modal -->
+  <div id="mealEditModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--green); text-align: right;">
+      <div class="modal-title" style="text-align:center;" id="mealEditTitle">تخصيص أصناف وأوزان الوجبة</div>
+
+      <!-- Saved Presets Bar -->
+      <div
+        style="background:#090d14; border:1px solid var(--border); padding:8px; border-radius:11px; margin-bottom:10px;">
+        <div style="font-size:11px; color:var(--purple); font-weight:800; margin-bottom:5px;">📂 قوالب محفوظة جاهزة:
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr auto auto; gap:5px;">
+          <select id="presetSelect" style="padding:7px 8px; font-size:12px;"></select>
+          <button class="btn btn-purple" style="padding:6px 10px; font-size:11px;"
+            data-action="apply-selected-preset">تطبيق</button>
+          <button class="btn btn-red" style="padding:6px 9px; font-size:11px;"
+            data-action="delete-selected-preset">🗑️</button>
+        </div>
+      </div>
+
+      <div id="mealIngredientsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 9px; margin-bottom: 9px;">
+        <div style="font-size: 11px; color: var(--muted); margin-bottom: 5px;">➕ إضافة أو تبديل صنف في هذه الوجبة:</div>
+        <input type="search" id="mealAddSearch" placeholder="🔍 ابحث عن صنف بالاسم" data-input="populate-meal-add-select"
+          style="margin-bottom:6px;" />
+        <div class="form-row">
+          <select id="mealAddSelect"></select>
+          <input type="number" id="mealAddGrams" value="100" placeholder="غرام" />
+        </div>
+        <button class="btn btn-blue" style="width:100%; padding:8px; font-size:12px;" data-action="add-ingredient-to-meal">+
+          إضافة الصنف للوجبة</button>
+      </div>
+
+      <div id="mealEditSummary" class="preview-pill">الإجمالي: 0 سعرة | 0 غ بروتين</div>
+      <button class="btn btn-purple" style="width:100%; padding:8px; font-size:12px; margin-bottom:8px;"
+        data-action="save-current-as-preset">💾 حفظ هذه التوليفة كقالب دائم</button>
+      <div class="btn-grid-2">
+        <button class="btn btn-green" data-action="save-meal-customization">اعتماد لليوم</button>
+        <button class="btn" data-action="close-meal-edit">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Water Amount Edit Modal (Includes 50ml & 100ml) -->
+  <div id="waterEditModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--blue);">
+      <div class="modal-title" id="waterEditTitle">تعديل كمية الماء (مل)</div>
+      <div class="modal-desc">اختر الكمية التي شربتها فعلياً في هذه المحطة:</div>
+      <div class="preset-ml-grid">
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="50">50 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="100">100 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="150">150 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="200">200 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="250">250 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="300">300 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="350">350 مل</button>
+        <button class="btn btn-blue" data-action="set-quick-water-val" data-ml="850">850 مل</button>
+      </div>
+      <input type="number" id="waterEditInput" step="10" min="0"
+        style="font-size:20px; font-weight:800; text-align:center; margin-bottom:14px;" />
+      <div class="btn-grid-2">
+        <button class="btn btn-green" data-action="save-water-edit">حفظ الكمية</button>
+        <button class="btn" data-action="close-water-edit">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Cloud Telegram Background Push Modal -->
+  <div id="tgModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--blue); text-align: right;">
+      <div class="modal-title" style="text-align:center;">✈️ تنبيهات تيليغرام السحابية بالخلفية</div>
+      <div class="modal-desc" style="text-align:center;">يُرسل التطبيق جدول مهامك وأي تزحيف جديد تلقائياً للسحابة ليصلك
+        إشعار تيليغرام في الدقيقة المحددة حتى لو كان التطبيق مغلقاً تماماً.</div>
+
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px; color:var(--muted);">1. توكن البوت (Telegram Bot Token):</label>
+        <input type="text" id="tgBotToken" placeholder="123456789:ABCdefGHI..."
+          style="direction:ltr; text-align:left; font-size:12px;" />
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px; color:var(--muted);">2. رقم المحادثة (Chat ID):</label>
+        <input type="text" id="tgChatId" placeholder="987654321"
+          style="direction:ltr; text-align:left; font-size:12px;" />
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px; color:var(--muted);">3. رابط السكربت السحابي (Google Apps Script Web App
+          URL):</label>
+        <input type="url" id="tgWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec"
+          style="direction:ltr; text-align:left; font-size:12px;" />
+      </div>
+
+      <div class="btn-grid-2" style="margin-bottom:10px;">
+        <button class="btn btn-green" data-action="save-telegram-config">💾 حفظ ومزامنة الآن</button>
+        <button class="btn btn-blue" data-action="test-telegram-message">🔔 إرسال رسالة تجريبية</button>
+      </div>
+
+      <details
+        style="background:#090d14; border:1px solid var(--border); border-radius:10px; padding:8px; margin-bottom:10px;">
+        <summary style="font-size:11px; font-weight:800; color:var(--amber); cursor:pointer;">📋 كود الربط السحابي
+          المجاني (Google Apps Script)</summary>
+        <p style="font-size:11px; color:var(--muted); margin-top:5px;">افتح <strong>script.google.com</strong> ← مشروع
+          جديد ← الصق الكود ← انشره كـ Web App (Anyone) + فعّل مشغّل زمني (Trigger) كل دقيقة لدالة
+          <code>checkAlarms</code>:</p>
+        <button class="btn btn-amber" style="width:100%; padding:6px; font-size:11px; margin-top:6px;"
+          data-action="copy-gas-snippet">📋 نسخ كود السكربت</button>
+        <pre id="gasCodeSnippet" class="code-box"></pre>
+      </details>
+
+      <button class="btn" style="width:100%;" data-action="close-telegram-modal">إغلاق</button>
+    </div>
+  </div>
+
+  <div id="waterGoalModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--blue);">
+      <div class="modal-title">تعديل هدف الماء</div>
+      <div class="modal-desc" id="waterGoalDesc">الهدف اليومي (مل) لهالنمط:</div>
+      <input type="number" id="waterGoalInput" inputmode="numeric" min="500" step="50"
+        style="font-size:20px; font-weight:800; text-align:center; margin-bottom:14px;" />
+      <div class="btn-grid-2" style="margin-bottom:8px;">
+        <button class="btn btn-green" data-action="save-water-goal">حفظ</button>
+        <button class="btn" data-action="close-water-goal-edit">إلغاء</button>
+      </div>
+      <button class="btn" style="width:100%; font-size:12px;" data-action="reset-water-goal">إرجاع الهدف الافتراضي</button>
+    </div>
+  </div>
+
+  <div id="nutrGoalsModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--green); text-align:right;">
+      <div class="modal-title" style="text-align:center;">أهدافي الغذائية اليومية</div>
+      <div class="modal-desc" style="text-align:center;">اكتب الرقم اللي بدك تلتزم فيه، أو اترك الحقل فاضي بدون هدف.
+        (السعرات والبروتين من البرنامج نفسه.)</div>
+      <div class="form-row-eq">
+        <div><label style="font-size:11px; color:var(--muted);">كارب (غ) - حد أقصى</label><input type="number"
+            id="ng_carb" inputmode="decimal" /></div>
+        <div><label style="font-size:11px; color:var(--muted);">دهون (غ) - حد أقصى</label><input type="number"
+            id="ng_fat" inputmode="decimal" /></div>
+      </div>
+      <div class="form-row-eq">
+        <div><label style="font-size:11px; color:var(--muted);">ألياف (غ) - حد أدنى</label><input type="number"
+            id="ng_fib" inputmode="decimal" /></div>
+        <div><label style="font-size:11px; color:var(--muted);">سكريات (غ) - حد أقصى</label><input type="number"
+            id="ng_sug" inputmode="decimal" /></div>
+      </div>
+      <div class="form-row-eq">
+        <div><label style="font-size:11px; color:var(--muted);">مشبعة (غ) - حد أقصى</label><input type="number"
+            id="ng_sat" inputmode="decimal" /></div>
+        <div><label style="font-size:11px; color:var(--muted);">صوديوم (مغ) - حد أقصى</label><input type="number"
+            id="ng_sod" inputmode="decimal" /></div>
+      </div>
+      <div class="btn-grid-2" style="margin-top:6px;">
+        <button class="btn btn-green" data-action="save-nutr-goals">حفظ</button>
+        <button class="btn" data-action="close-nutr-goals">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Top Strip: Sound, Cloud Push, Calendar Export -->
+    <div class="alert-strip">
+      <div id="permBanner" class="strip-btn warn" data-action="enable-alerts-and-audio">
+        🔔 تفعيل الصوت
+      </div>
+      <div id="tgStatusBadge" class="strip-btn" data-action="open-telegram-modal">
+        ✈️ تنبيه تيليغرام
+      </div>
+      <div class="strip-btn blue" data-action="export-schedule-ics">
+        📅 تصدير للتقويم
+      </div>
+    </div>
+
+    <!-- Header, History Navigator & Program Switcher -->
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <h1>متابع البرنامج الصحي</h1>
+        </div>
+        <span id="activeTargetBadge"
+          style="font-size:11px; font-weight:800; color:var(--green); background:var(--green-dim); padding:4px 9px; border-radius:999px;">3,250
+          مل</span>
+      </div>
+
+      <!-- Date History Navigator -->
+      <div class="date-nav">
+        <button class="date-nav-btn" data-action="change-viewing-date" data-delta="-1">◀ السابق</button>
+        <div class="date-label" id="dateDisplay">جاري التحميل...</div>
+        <button id="todayJumpBtn" class="date-nav-btn" style="display:none; color:var(--green);"
+          data-action="jump-to-today">اليوم</button>
+        <button id="nextDayBtn" class="date-nav-btn" data-action="change-viewing-date" data-delta="1">التالي ▶</button>
+      </div>
+
+      <div class="mode-pills">
+        <button id="mode-gym" class="mode-btn" data-action="switch-day-mode" data-mode="gym">💪 أيام النادي</button>
+        <button id="mode-sat" class="mode-btn" data-action="switch-day-mode" data-mode="sat">🏋️ السبت (2 ظ)</button>
+        <button id="mode-rest" class="mode-btn" data-action="switch-day-mode" data-mode="rest">🛌 راحة (خميس/أحد)</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: TODAY (NEXT STATION + WATER LOCK + HYDRATION + SCHEDULE) -->
+    <div id="tab-today" class="tab-content active">
+
+      <!-- Smart Focus: Next Pending Station Card -->
+      <div id="nextStationCard" class="next-card">
+        <div class="next-top">
+          <span class="next-badge" id="nextStationBadge">⚡ المحطة القادمة</span>
+          <span class="next-countdown" id="nextStationCountdown">--</span>
+        </div>
+        <div class="next-title" id="nextStationTitle">جاري التحميل...</div>
+        <div class="next-sub" id="nextStationSub"></div>
+        <div class="next-actions">
+          <button id="nextStationDoneBtn" class="btn btn-green" style="padding:8px 10px; font-size:12px;"
+            data-action="complete-next-station">✅ إنجاز الآن</button>
+          <button id="nextStationScrollBtn" class="btn btn-blue" style="padding:8px 10px; font-size:12px;"
+            data-action="scroll-to-next-station">📍 انتقال</button>
+        </div>
+      </div>
+
+      <!-- Water Lock Timer -->
+      <div class="card">
+        <div class="card-title">
+          <span>⏱️ مؤقت قفل الماء (الهضم)</span>
+          <div style="display:flex; gap:5px;">
+            <button class="btn" style="padding:4px 8px; font-size:11px;" data-action="play-single-chime">🔔 تجربة</button>
+          </div>
+        </div>
+        <div id="lockStatusBox" class="lock-box lock-open">
+          <div id="lockStatusText" style="font-size:13px; font-weight:800;">✅ باب الماء مفتوح — اشرب رشفات هادية</div>
+          <div id="lockTimerText" class="timer-display" style="display:none;">45:00</div>
+          <div id="lockTimerSub" class="timer-sub" style="display:none;"></div>
+        </div>
+        <div class="btn-grid-2">
+          <button class="btn btn-red" data-action="start-water-lock" data-lock="45" data-eat="0">🔒 قفل 45 د</button>
+          <button class="btn btn-amber" data-action="start-water-lock" data-lock="30" data-eat="0">🔒 قفل 30 د</button>
+        </div>
+        <button id="cancelLockBtn" class="btn" style="width:100%; margin-top:7px; display:none; font-size:12px;"
+          data-action="cancel-water-lock">إلغاء القفل يدوياً</button>
+      </div>
+
+      <!-- Hydration Counter -->
+      <div class="card">
+        <div class="card-title">
+          <span>💧 عدّاد الماء اليومي</span>
+          <span style="color:var(--blue); font-weight:900; cursor:pointer;" data-action="open-water-goal-edit"><span
+              id="waterVal">0</span> / <span id="waterGoalLabel"
+              style="border-bottom:1px dashed var(--blue);">3,250</span> مل ✏️</span>
+        </div>
+        <div class="progress-wrap">
+          <div id="waterBar" class="progress-fill" style="width:0%; background:var(--blue);"></div>
+        </div>
+        <div class="btn-grid-4" style="margin-top:10px;">
+          <button class="btn btn-blue" data-action="add-water" data-ml="100">+100 مل</button>
+          <button class="btn btn-blue" data-action="add-water" data-ml="150">+150 مل</button>
+          <button class="btn btn-blue" data-action="add-water" data-ml="200">+200 مل</button>
+          <button class="btn btn-blue" data-action="add-water" data-ml="250">+250 مل</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+          <span style="font-size:11px; color:var(--muted);">المتبقي للهدف: <strong id="waterRem">3,250</strong>
+            مل</span>
+          <button class="btn" style="padding:4px 10px; font-size:11px;" data-action="add-water" data-ml="-50">تراجع -50 مل</button>
+        </div>
+      </div>
+
+      <!-- Full Daily Checklist -->
+      <div class="card">
+        <div class="card-title">
+          <span>📋 جدول اليوم (اضغط عالوقت أو المي لتعديله)</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button class="btn" style="padding:3px 7px; font-size:10px;" data-action="reset-schedule-times">إعادة
+              الساعات</button>
+            <span id="tasksProgress" style="font-size:12px; color:var(--green);">0/0</span>
+          </div>
+        </div>
+        <div id="tasksList"></div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: CALORIES & MEALS -->
+    <div id="tab-food" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>🔥 ميزانية السعرات والبروتين</span>
+          <span style="font-size:12px; color:var(--muted);">السقف: <span id="calGoalLabel">1,850</span> سعرة</span>
+        </div>
+        <div class="macro-grid">
+          <div class="macro-box">
+            <div class="macro-val" style="color:var(--green);" id="calVal">0</div>
+            <div class="macro-lbl">سعرة مستهلكة</div>
+          </div>
+          <div class="macro-box">
+            <div class="macro-val" style="color:var(--amber);" id="calRem">1,850</div>
+            <div class="macro-lbl">سعرة متبقية</div>
+          </div>
+          <div class="macro-box">
+            <div class="macro-val" style="color:var(--blue);" id="proVal">0 غ</div>
+            <div class="macro-lbl">بروتين (الهدف <span id="proGoalLabel">140</span>غ)</div>
+          </div>
+        </div>
+        <div class="progress-wrap" style="margin-top:10px;">
+          <div id="calBar" class="progress-fill" style="width:0%; background:var(--green);"></div>
+        </div>
+        <button class="btn btn-amber" style="width:100%; margin-top:8px; font-size:12px;" data-action="open-smart-swaps">💡
+          بدائل ذكية لتخفيض السعرات</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🥗 القيم الغذائية اليومية</span>
+          <button class="btn" style="padding:4px 9px; font-size:11px;" data-action="open-nutr-goals">⚙️ أهدافي</button>
+        </div>
+        <div id="nutrGrid" class="nutr-grid"></div>
+        <div style="font-size:10px; color:var(--muted); margin-top:8px;">القيم تقديرية من قواعد بيانات تغذية عامة،
+          والصوديوم أقلها دقة. الأحمر = تجاوزت الهدف، الأخضر = حققت الحد الأدنى.</div>
+      </div>
+
+      <!-- Categorized Gram Calculator -->
+      <div class="card">
+        <div class="card-title"><span>⚖️ حاسبة الأكل الإضافي بالغرام (مرتبة أبجدياً)</span></div>
+
+        <div class="form-row-eq">
+          <select id="foodCategory" data-change="set-food-category"></select>
+          <input type="search" id="foodSearch" placeholder="🔍 ابحث بالاسم" data-input="populate-food-select" />
+        </div>
+
+        <div class="form-row">
+          <select id="foodSelect" data-change="update-food-preview"></select>
+          <input type="number" id="foodGrams" placeholder="الوزن (غ)" value="100" data-input="update-food-preview" />
+          <input type="number" id="foodMl" placeholder="الحجم (مل)" value="100" data-input="update-food-preview"
+            style="display:none;" />
+        </div>
+        <div id="customMacroInputs" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+          <input type="text" id="custom_name" placeholder="اسم الأكلة" style="grid-column:1/-1;" />
+          <input type="number" id="custom_cal" placeholder="سعرات / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_pro" placeholder="بروتين / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_carb" placeholder="كارب / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_fat" placeholder="دهون / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_fib" placeholder="ألياف / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_sug" placeholder="سكريات / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_sat" placeholder="مشبعة / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+          <input type="number" id="custom_sod" placeholder="صوديوم مغ / 100غ" inputmode="decimal"
+            data-input="update-food-preview" />
+        </div>
+        <div id="foodPreview" class="preview-pill">النتيجة: 0 سعرة | 0 غ بروتين</div>
+        <button class="btn btn-green" style="width:100%;" data-action="add-food-item">+ إضافة إلى وجبات اليوم</button>
+      </div>
+
+      <!-- Logged Meals -->
+      <div class="card">
+        <div class="card-title"><span>🍽️ سجل الوجبات المحسوبة اليوم</span></div>
+        <div id="mealsList">
+          <div style="font-size:12px; color:var(--muted); text-align:center;">ضع علامة ✓ على أي وجبة بالرئيسية أو أضفها
+            هنا</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PRAYERS & SHAFI'I RAWATIB -->
+    <div id="tab-prayer" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>🕌 الصلوات الخمس المفروضة</span>
+          <span id="fardProgress" style="font-size:12px; color:var(--purple); font-weight:800;">0/5</span>
+        </div>
+        <div id="fardList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📿 السنن الرواتب المؤكدة (المذهب الشافعي — 10 ركعات)</span>
+          <span id="sunnahConfirmedProgress" style="font-size:12px; color:var(--green); font-weight:800;">0/5</span>
+        </div>
+        <div id="sunnahConfirmedList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🌙 السنن الرواتب غير المؤكدة والوتر (المذهب الشافعي)</span>
+          <span id="sunnahExtraProgress" style="font-size:12px; color:var(--amber); font-weight:800;">0/7</span>
+        </div>
+        <div id="sunnahExtraList"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: WEIGHT, CHART, BACKUP & REPORT -->
+    <div id="tab-tools" class="tab-content">
+      <!-- Weight Tracker & Editable Goal -->
+      <div class="card">
+        <div class="card-title">
+          <span>⚖️ متابعة الوزن والهدف الأسبوعي</span>
+        </div>
+        <div class="form-row-eq">
+          <div>
+            <label style="font-size:11px; color:var(--muted);">وزنك الصباحي (كغ):</label>
+            <input type="number" step="0.1" id="weightInput" placeholder="مثلاً 109.2" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--muted);">الهدف الأسبوعي (كغ):</label>
+            <input type="number" step="0.1" id="targetWeightInput" placeholder="108.6" />
+          </div>
+        </div>
+        <button class="btn btn-green" style="width:100%; margin-bottom:8px;" data-action="save-weight-and-goal">💾 حفظ الوزن
+          والهدف</button>
+        <div id="weightDiffText" style="font-size:13px; color:var(--muted);">أدخل وزنك الصباحي بعد دخول الحمام وقبل
+          الشرب.</div>
+
+        <!-- Interactive SVG Weight Chart -->
+        <div class="chart-wrap">
+          <div style="font-size:11px; font-weight:800; color:var(--blue); margin-bottom:6px;">📈 منحنى تطور الوزن مقارنة
+            بالهدف</div>
+          <div id="weightChartBox"></div>
+        </div>
+      </div>
+
+      <!-- 7-Day Adherence Summary -->
+      <div class="card">
+        <div class="card-title"><span>📊 ملخص الالتزام لآخر 7 أيام</span></div>
+        <div id="weeklyStatsBox" class="macro-grid"></div>
+      </div>
+
+      <!-- Emergency Offset Calculator -->
+      <div class="card">
+        <div class="card-title"><span>🧮 مُعدّل الطوارئ (تصحيح أي أكلة إضافية)</span></div>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:8px;">أكلت قطعة حلو أو لقمة خارج البرنامج؟ اكتب
+          اسمها وسعراتها حتى نحسبلك التعديل ونسجّلها بالتقرير:</p>
+        <div class="form-row">
+          <input type="text" id="extraNameInput" placeholder="اسم الأكلة (مثلاً: تريليتشا 77غ)" />
+          <input type="number" id="extraCalInput" placeholder="السعرات (210)" />
+        </div>
+        <button class="btn btn-amber" style="width:100%;" data-action="calc-offset">احسب التعديل وسجّلها</button>
+        <div id="offsetResult"
+          style="font-size:13px; background:var(--card-2); padding:10px; border-radius:10px; display:none; margin-top:8px; border:1px solid var(--border);">
+        </div>
+        <div id="offsetLogList" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- Export, Backup & Reset -->
+      <div class="card">
+        <div class="card-title"><span>📤 التقرير والنسخ الاحتياطي</span></div>
+        <button class="btn btn-blue" style="width:100%; margin-bottom:8px;" data-action="copy-daily-report">📋 نسخ تقرير
+          اليوم (للصقه في المحادثة)</button>
+        <div class="btn-grid-2" style="margin-bottom:8px;">
+          <button class="btn btn-purple" style="font-size:12px;" data-action="export-backup-json">📥 تصدير نسخة
+            (JSON)</button>
+          <button class="btn" style="font-size:12px;" data-action="pick-backup-file">📤
+            استعادة نسخة (JSON)</button>
+        </div>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;"
+          data-change="import-backup-json" />
+        <button class="btn btn-red" style="width:100%;" data-action="reset-today">🔄 تصفير بيانات اليوم الحالي فقط</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="nav">
+    <button class="nav-btn active" data-action="switch-tab" data-tab="today"><span class="nav-icon">💧</span>اليوم
+      والوجبات</button>
+    <button class="nav-btn" data-action="switch-tab" data-tab="food"><span class="nav-icon">🍗</span>السعرات</button>
+    <button class="nav-btn" data-action="switch-tab" data-tab="prayer"><span class="nav-icon">🕌</span>الصلاة</button>
+    <button class="nav-btn" data-action="switch-tab" data-tab="tools"><span class="nav-icon">📊</span>الوزن والتقرير</button>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+
+</html>
