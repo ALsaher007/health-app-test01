@@ -78,6 +78,7 @@ export function openMealEdit(e, taskId) {
   populatePresetDropdown();
 
   document.getElementById("mealAddSearch").value = "";
+  document.getElementById("mealAddGrams").value = "";
   populateMealAddSelect();
 
   renderMealIngredientsEditor();
@@ -130,10 +131,22 @@ export function addIngredientToMeal() {
   if (selVal === "") { showToast("ما في صنف بهالاسم، جرّب كلمة تانية"); return; }
   const idx = parseInt(selVal);
   const f = ALL_FOOD_ITEMS[idx];
-  const grams = parseFloat(document.getElementById("mealAddGrams").value) || 100;
-  if (!f || grams <= 0) return;
+  if (!f) return;
+  const gramsInput = document.getElementById("mealAddGrams");
+  const grams = parseFloat(gramsInput.value);
+  if (!(grams > 0)) { showToast("أدخل الوزن بالغرام أولاً"); gramsInput.focus(); return; }
   editing.tempMealItems.push(makeMealItem(f, grams));
   renderMealIngredientsEditor();
+  resetMealAddInputs();
+}
+
+// After a successful add: clear search + grams, rebuild the full result list, refocus search.
+function resetMealAddInputs() {
+  const search = document.getElementById("mealAddSearch");
+  search.value = "";
+  document.getElementById("mealAddGrams").value = "";
+  populateMealAddSelect();
+  search.focus();
 }
 
 export function saveMealCustomization() {
