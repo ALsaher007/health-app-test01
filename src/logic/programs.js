@@ -1,7 +1,11 @@
 // Persistent program profiles ("Program Profiles").
 //
 // Every profile is an immutable master template:
-//   { id, name, modes: { gym|sat|rest: { label, waterGoal, calGoal, proGoal, tasks: [...] } } }
+//   { id, name,
+//     modes:   { <modeId>: { name, label, waterGoal, calGoal, proGoal, tasks: [...] } },
+//     weekMap: { 0..6 (JS getDay: Sun=0 ... Sat=6): <modeId> } }
+// Every profile has the two base modes "gym" and "rest" (not deletable); extra modes
+// ("نمط خاص", e.g. Saturday) are optional and per profile.
 // `tasks` holds the fixed tasks / medicines / alarms with their times; a task that has
 // `defaultItems` is a meal, and those items carry the fixed grams.
 //
@@ -12,7 +16,12 @@ import { DEFAULT_CAL_GOAL, DEFAULT_PRO_GOAL, DEFAULT_WATER_GOAL } from "../confi
 import { PROGRAMS } from "../data/programs.js"; // built-in defaults: seed for the first run + legacy days
 
 export const PROGRAMS_KEY = "aburaslan_programs"; // "aburaslan_" prefix => included in the JSON backup
-export const MODE_KEYS = ["gym", "sat", "rest"];
+export const BASE_MODES = ["gym", "rest"];
+export const DEFAULT_MODE_NAMES = { gym: "💪 النادي", sat: "🏋️ السبت", rest: "🛏️ راحة" };
+export const WEEK_DAYS = [ // display order (Saturday first) with JS getDay() numbers
+  { dow: 6, name: "السبت" }, { dow: 0, name: "الأحد" }, { dow: 1, name: "الاثنين" }, { dow: 2, name: "الثلاثاء" },
+  { dow: 3, name: "الأربعاء" }, { dow: 4, name: "الخميس" }, { dow: 5, name: "الجمعة" }
+];
 export const DEFAULT_PROFILE_ID = "prof_default";
 export const DEFAULT_PROFILE_NAME = "برنامجي الحالي";
 
@@ -39,7 +48,40 @@ function isValidMode(m) {
 
 export function isValidProfile(p) {
   return !!p && typeof p === "object" && typeof p.id === "string" && p.id !== "" &&
-    typeof p.name === "string" && !!p.modes && MODE_KEYS.every(k => isValidMode(p.modes[k]));
+    typeof p.name === "string" && !!p.modes && typeof p.modes === "object" &&
+    BASE_MODES.every(k => isValidMode(p.modes[k])) && Object.values(p.modes).every(isValidMode);
+}
+
+export function modeKeys(profile) {
+  return Object.keys(profile.modes);
+}
+
+export function modeName(profile, id) {
+  const m = profile.modes[id];
+  return (m && m.name) || DEFAULT_MODE_NAMES[id] || id;
+}
+
+/** Sun/Thu = rest, Sat = the "sat" mode when the profile has one, everything else = gym. */
+export function defaultWeekMap(modes) {
+  return { 0: "rest", 1: "gym", 2: "gym", 3: "gym", 4: "rest", 5: "gym", 6: modes.sat ? "sat" : "gym" };
+}
+
+/** Fills missing mode names and a missing / broken week map (also upgrades profiles saved by older versions). */
+function upgradeProfile(p) {
+  Object.keys(p.modes).forEach(k => { if (!p.modes[k].name) p.modes[k].name = DEFAULT_MODE_NAMES[k] || k; });
+  const def = defaultWeekMap(p.modes);
+  const wm = p.weekMap && typeof p.weekMap === "object" ? p.weekMap : {};
+  p.weekMap = {};
+  for (let d = 0; d < 7; d++) p.weekMap[d] = typeof wm[d] === "string" && p.modes[wm[d]] ? wm[d] : def[d];
+  return p;
+}
+
+/** Mode a profile assigns to a weekday of the date "YYYY-MM-DD". */
+export function modeForDateStr(profile, dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return (profile && profile.weekMap && profile.modes[profile.weekMap[dow]] && profile.weekMap[dow]) ||
+    (dow === 6 ? "sat" : dow === 0 || dow === 4 ? "rest" : "gym");
 }
 
 /** Returns a clean store object, or null when `obj` is not a usable store. */
@@ -50,7 +92,7 @@ export function normalizeStore(obj) {
     if (!isValidProfile(p) || seen.has(p.id)) return false;
     seen.add(p.id);
     return true;
-  });
+  }).map(upgradeProfile);
   const activeId = typeof obj.activeId === "string" && seen.has(obj.activeId) ? obj.activeId : null;
   return { version: 1, activeId, profiles };
 }
@@ -63,7 +105,8 @@ export function isValidProgramsPayload(raw) {
 // ----- store -----
 
 function buildDefaultProfile() {
-  return { id: DEFAULT_PROFILE_ID, name: DEFAULT_PROFILE_NAME, modes: deepClone(PROGRAMS) };
+  // first program keeps its three modes and the current weekday split (Sat -> sat, Thu/Sun -> rest)
+  return upgradeProfile({ id: DEFAULT_PROFILE_ID, name: DEFAULT_PROFILE_NAME, modes: deepClone(PROGRAMS) });
 }
 
 function writeStore(store) {
@@ -122,11 +165,11 @@ function cleanName(name, fallback = "برنامج جديد") {
   return n || fallback;
 }
 
-function emptyModes() {
+function emptyModes() { // a new program starts with the two base modes only
   const modes = {};
-  MODE_KEYS.forEach(k => {
+  BASE_MODES.forEach(k => {
     const d = PROGRAMS[k];
-    modes[k] = { label: d.label, waterGoal: d.waterGoal, calGoal: d.calGoal, proGoal: d.proGoal, tasks: [] };
+    modes[k] = { name: DEFAULT_MODE_NAMES[k], label: d.label, waterGoal: d.waterGoal, calGoal: d.calGoal, proGoal: d.proGoal, tasks: [] };
   });
   return modes;
 }
@@ -135,7 +178,8 @@ function emptyModes() {
 export function createProfile(name, fromId = null) {
   const s = getProgramsStore();
   const src = fromId ? s.profiles.find(p => p.id === fromId) : null;
-  const profile = { id: newProfileId(), name: cleanName(name), modes: src ? deepClone(src.modes) : emptyModes() };
+  const modes = src ? deepClone(src.modes) : emptyModes();
+  const profile = upgradeProfile({ id: newProfileId(), name: cleanName(name), modes, weekMap: src ? deepClone(src.weekMap) : undefined });
   s.profiles.push(profile);
   writeStore(s);
   return profile;
@@ -147,7 +191,7 @@ export function saveProfile(profile) {
   const s = getProgramsStore();
   const i = s.profiles.findIndex(p => p.id === profile.id);
   if (i === -1) return false;
-  const clean = deepClone(profile);
+  const clean = upgradeProfile(deepClone(profile));
   clean.name = cleanName(clean.name, s.profiles[i].name);
   s.profiles[i] = clean;
   writeStore(s);
@@ -182,7 +226,7 @@ export function snapshotActiveProgram(mode) {
 /** Same, but prefers the profile a day already runs on (mode switch inside "from tomorrow" days). */
 export function snapshotForMode(mode, preferProfileId = null) {
   const preferred = preferProfileId ? getProfile(preferProfileId) : null;
-  return makeSnap(preferred || getActiveProfile(), mode);
+  return makeSnap(preferred, mode) || makeSnap(getActiveProfile(), mode);
 }
 
 /** Days saved before this feature carry no snapshot: they keep the built-in program they ran on. */
@@ -209,6 +253,7 @@ export function buildProfileFromDay(name, day, effective) {
   const modes = deepClone(base.modes);
   const prog = effective.program;
   modes[day.dayMode] = {
+    name: (modes[day.dayMode] && modes[day.dayMode].name) || DEFAULT_MODE_NAMES[day.dayMode] || day.dayMode,
     label: prog.label, waterGoal: prog.waterGoal, calGoal: prog.calGoal, proGoal: prog.proGoal,
     tasks: prog.tasks.map(t => {
       const c = deepClone(t);
@@ -220,7 +265,7 @@ export function buildProfileFromDay(name, day, effective) {
     })
   };
   const s = getProgramsStore();
-  const profile = { id: newProfileId(), name: cleanName(name), modes };
+  const profile = upgradeProfile({ id: newProfileId(), name: cleanName(name), modes, weekMap: deepClone(base.weekMap) });
   s.profiles.push(profile);
   writeStore(s);
   return profile;

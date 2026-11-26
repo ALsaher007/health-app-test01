@@ -1,4 +1,4 @@
-const CACHE = "aburaslan-fit-v15"; // keep in sync with CACHE_NAME in src/config.js
+const CACHE = "aburaslan-fit-v17"; // keep in sync with CACHE_NAME in src/config.js
 const SHELL = [
   "./", "./index.html", "./manifest.json",
   // icons are requested with ?v=2, and cache.match() is exact about the query string

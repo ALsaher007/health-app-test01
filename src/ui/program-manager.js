@@ -7,7 +7,7 @@ import { resyncAlarmsForProgramChange } from "../logic/alarms.js";
 import { makeMealItem, normAr } from "../logic/nutrition.js";
 import {
   buildProfileFromDay, createProfile, deepClone, deleteProfile, getActiveProfileId, getProfile, getProfiles,
-  MODE_KEYS, saveProfile, setActiveProfile, snapshotActiveProgram
+  BASE_MODES, DEFAULT_MODE_NAMES, WEEK_DAYS, getActiveProfile, modeForDateStr, modeKeys, modeName, saveProfile, setActiveProfile, snapshotActiveProgram
 } from "../logic/programs.js";
 import { getActiveProgram, getTaskMealItems, getTaskMins, getTaskWater, hhmmToMins, minsToHHMM, resetDayProgress } from "../logic/schedule.js";
 import { syncScheduleToCloud } from "../logic/telegram.js";
@@ -90,6 +90,8 @@ function applyActiveProgramToToday() {
   resetDayProgress();
   state.customMeals = {};
   state.customWater = {};
+  const active = getActiveProfile();
+  if (active && !active.modes[state.dayMode]) state.dayMode = modeForDateStr(active, currentTodayStr); // old mode is not in the new program
   state.programSnap = snapshotActiveProgram(state.dayMode);
   resyncAlarmsForProgramChange();
   saveState();
@@ -224,8 +226,12 @@ function foodOptionsHtml(q) {
 export function renderProgramEditor() {
   const d = editing.programDraft;
   if (!d) return;
+  if (!d.modes[editing.programEditMode]) editing.programEditMode = "gym";
   const mode = editing.programEditMode;
   const m = d.modes[mode];
+  const isExtra = !BASE_MODES.includes(mode);
+  const modeTabs = modeKeys(d).map(k => `<button class="mode-btn${k === mode ? " active" : ""}" data-action="program-edit-mode" data-mode="${esc(k)}">${esc(modeName(d, k))}</button>`).join("");
+  const dayRow = WEEK_DAYS.map(w => `<button class="pe-day" data-action="program-edit-day" data-day="${w.dow}" title="اضغط لتبديل النمط"><b>${w.name}</b><small>${esc(modeName(d, d.weekMap[w.dow]))}</small></button>`).join("");
   const tasks = m.tasks.map((t, i) => {
     const isMeal = Array.isArray(t.defaultItems);
     const items = isMeal ? t.defaultItems.map((it, j) => `
@@ -257,9 +263,16 @@ export function renderProgramEditor() {
   document.getElementById("programEditBody").innerHTML = `
     <label class="pe-label">اسم البرنامج</label>
     <input type="text" maxlength="40" value="${esc(d.name)}" data-input="program-edit-name" />
-    <div class="mode-pills" style="margin:10px 0;">
-      ${MODE_KEYS.map(k => `<button class="mode-btn${k === mode ? " active" : ""}" data-action="program-edit-mode" data-mode="${k}">${MODE_LABELS[k]}</button>`).join("")}
+    <div class="pe-modebar">
+      <div class="pe-modes">${modeTabs}</div>
+      <button class="btn btn-blue pe-addmode" data-action="program-edit-add-mode">+ نمط خاص</button>
     </div>
+    ${isExtra ? `<div class="pe-extra">
+      <input type="text" id="pe_mode_name" maxlength="24" value="${esc(m.name)}" placeholder="اسم النمط (مثال: السبت)" data-input="program-edit-mode-name" />
+      <button class="btn btn-red" data-action="program-edit-del-mode">🗑️ حذف النمط</button>
+    </div>` : ""}
+    <label class="pe-label">توزيع أيام الأسبوع (اضغط اليوم لتبديل نمطه)</label>
+    <div class="pe-week">${dayRow}</div>
     <div class="pe-goals">
       <div><label class="pe-label">ماء (مل)</label><input type="number" min="0" value="${m.waterGoal}" data-input="program-edit-goal" data-goal="waterGoal" /></div>
       <div><label class="pe-label">سعرات</label><input type="number" min="0" value="${m.calGoal}" data-input="program-edit-goal" data-goal="calGoal" /></div>
@@ -275,8 +288,49 @@ export function renderProgramEditor() {
 // ----- editor handlers (draft only; the stored template changes on save) -----
 
 export function programEditSetMode(mode) {
-  if (!editing.programDraft || !MODE_KEYS.includes(mode)) return;
+  if (!editing.programDraft || !editing.programDraft.modes[mode]) return;
   editing.programEditMode = mode;
+  renderProgramEditor();
+}
+
+/** Weekday button: cycles the day through this program's modes. */
+export function programEditCycleDay(dow) {
+  const d = editing.programDraft;
+  if (!d || !(dow >= 0 && dow <= 6)) return;
+  const keys = modeKeys(d);
+  d.weekMap[dow] = keys[(keys.indexOf(d.weekMap[dow]) + 1) % keys.length];
+  renderProgramEditor();
+}
+
+/** "+ نمط خاص": a new mode that starts as a copy of the open one, so it can be tuned independently. */
+export function programEditAddMode() {
+  const d = editing.programDraft;
+  if (!d) return;
+  const id = "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
+  const src = d.modes[editing.programEditMode] || d.modes.gym;
+  const n = modeKeys(d).filter(k => !BASE_MODES.includes(k)).length + 1;
+  d.modes[id] = Object.assign(deepClone(src), { name: `نمط خاص ${n}` });
+  editing.programEditMode = id;
+  renderProgramEditor();
+  const inp = document.getElementById("pe_mode_name");
+  if (inp) { inp.focus(); if (inp.select) inp.select(); }
+}
+
+export function programEditModeName(v) {
+  const d = editing.programDraft;
+  const m = d && d.modes[editing.programEditMode];
+  if (m && !BASE_MODES.includes(editing.programEditMode)) m.name = v.slice(0, 24);
+}
+
+/** Extra modes only; days that used it fall back to "gym". The two base modes cannot be deleted. */
+export function programEditDelMode() {
+  const d = editing.programDraft;
+  const id = editing.programEditMode;
+  if (!d || BASE_MODES.includes(id) || !d.modes[id]) return;
+  if (!confirm(`حذف النمط «${modeName(d, id)}» بجدوله؟ الأيام المرتبطة به تعود إلى «${modeName(d, "gym")}».`)) return;
+  delete d.modes[id];
+  for (let i = 0; i < 7; i++) if (d.weekMap[i] === id) d.weekMap[i] = "gym";
+  editing.programEditMode = "gym";
   renderProgramEditor();
 }
 
@@ -348,7 +402,8 @@ export function saveProgramEdit() {
   const d = editing.programDraft;
   if (!d) return;
   if (!d.name.trim()) { showToast("اكتب اسماً للبرنامج"); return; }
-  MODE_KEYS.forEach(k => {
+  modeKeys(d).forEach(k => { if (!String(d.modes[k].name || "").trim()) d.modes[k].name = DEFAULT_MODE_NAMES[k] || "نمط خاص"; });
+  modeKeys(d).forEach(k => {
     const m = d.modes[k];
     m.tasks.forEach(t => {
       t.text = String(t.text || "").trim() || "مهمة";

@@ -2,7 +2,7 @@
 // ES module exports are live bindings: importers read the latest value but
 // cannot assign, so every reassignment goes through the setters below.
 import { STORAGE_PREFIX } from "./config.js";
-import { legacySnapshot, snapshotActiveProgram } from "./logic/programs.js";
+import { getActiveProfile, legacySnapshot, modeForDateStr, snapshotActiveProgram } from "./logic/programs.js";
 
 export function getTodayDateStr() {
   const now = new Date();
@@ -24,10 +24,9 @@ export function getLocalDateString(date) {
 export let currentTodayStr = getTodayDateStr();
 export let viewingDateStr = currentTodayStr;
 
+/** Day mode from the ACTIVE program's weekday map (legacy Sat/Thu/Sun split when none is active). */
 export function getDefaultModeForDate(dateStr) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dow = new Date(y, m - 1, d).getDay();
-  return dow === 6 ? "sat" : (dow === 0 || dow === 4) ? "rest" : "gym";
+  return modeForDateStr(getActiveProfile(), dateStr);
 }
 
 export function createEmptyDayState(dateStr) {

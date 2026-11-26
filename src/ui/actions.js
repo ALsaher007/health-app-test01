@@ -11,7 +11,7 @@ import { bodyFieldChanged, goalFieldChanged, openNutrGoals, recalcBodyGoals, set
 import {
   createProgramFromForm, deleteProgramById, openProgramEdit, openProgramManager, programApply, programEditAddItem, programEditAddTask,
   programEditDelItem, programEditDelTask, programEditFoodSearch, programEditGoal, programEditGrams, programEditName,
-  programEditSetMode, programEditTaskField, saveProgramEdit, saveTodayAsProgram, toggleProgramActive
+  programEditAddMode, programEditCycleDay, programEditDelMode, programEditModeName, programEditSetMode, programEditTaskField, saveProgramEdit, saveTodayAsProgram, toggleProgramActive
 } from "./program-manager.js";
 import { changeViewingDate, importBackupJSON, jumpToToday, resetToday, switchDayMode, switchTab } from "./render-all.js";
 import { addExerciseSwap, addFoodItem, addVeggieSwap, addWaterSwap, applySmartSwap, calcOffset, deleteMeal, deleteOffset, deleteSelectedMyFood, openSmartSwaps, populateFoodSelect, populateMealAddSelect, saveCustomFoodToMyFoods, saveNutrGoals, setFoodCategory, toggleCustomFood, updateFoodPreview } from "./render-meals.js";
@@ -77,6 +77,9 @@ export const CLICK = {
   "program-edit-add-task": () => programEditAddTask(false),
   "program-edit-del-item": el => programEditDelItem(Number(el.dataset.index), Number(el.dataset.item)),
   "program-edit-del-task": el => programEditDelTask(Number(el.dataset.index)),
+  "program-edit-add-mode": () => programEditAddMode(),
+  "program-edit-day": el => programEditCycleDay(Number(el.dataset.day)),
+  "program-edit-del-mode": () => programEditDelMode(),
   "program-edit-mode": el => programEditSetMode(el.dataset.mode),
   "program-save-edit": () => saveProgramEdit(),
   "program-save-today": () => saveTodayAsProgram(),
@@ -121,6 +124,7 @@ export const INPUT = {
   "program-edit-food-search": el => programEditFoodSearch(Number(el.dataset.index), el.value),
   "program-edit-goal": el => programEditGoal(el.dataset.goal, el.value),
   "program-edit-grams": el => programEditGrams(Number(el.dataset.index), Number(el.dataset.item), el.value),
+  "program-edit-mode-name": el => programEditModeName(el.value),
   "program-edit-name": el => programEditName(el.value),
   "program-edit-task": el => programEditTaskField(Number(el.dataset.index), el.dataset.field, el.value),
   "populate-food-select": () => populateFoodSelect(),
