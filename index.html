@@ -59,6 +59,17 @@
 
 
 
+
+    /* Manual custom-food form: labelled, compact */
+    .cf-grid { grid-template-columns: 1fr 1fr; gap: 6px 8px; margin-bottom: 8px; }
+    .cf-field { min-width: 0; }
+    .cf-full { grid-column: 1 / -1; }
+    .cf-field label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-bottom: 2px; line-height: 1.2; }
+    .cf-field input { padding: 5px 8px; min-height: 34px; font-size: 13px; border-radius: 9px; }
+    .cf-field input::placeholder { color: var(--muted); opacity: 0.45; }
+    .cf-actions { display: flex; gap: 8px; }
+    .cf-actions .btn { flex: 1; }
+
     /* Body-based goals */
     .bp-title { font-size: 12px; font-weight: 800; color: var(--green); margin: 10px 0 6px; }
     .bp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
@@ -1645,29 +1656,53 @@
             هذه الأكلة من أكلاتي</button>
         </div>
         </div>
-        <div id="customMacroInputs" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-          <input type="text" id="custom_name" placeholder="اسم الأكلة" style="grid-column:1/-1;" />
-          <input type="number" id="custom_grams" placeholder="الوزن المأكول (غ)" inputmode="decimal"
-            data-input="update-food-preview" style="grid-column:1/-1;" />
-          <input type="number" id="custom_cal" placeholder="سعرات / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_pro" placeholder="بروتين / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_carb" placeholder="كارب / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_fat" placeholder="دهون / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_fib" placeholder="ألياف / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_sug" placeholder="سكريات / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_sat" placeholder="مشبعة / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
-          <input type="number" id="custom_sod" placeholder="صوديوم مغ / 100غ" inputmode="decimal"
-            data-input="update-food-preview" />
+        <div id="customMacroInputs" class="cf-grid" style="display:none;">
+          <div class="cf-field cf-full">
+            <label for="custom_name">اسم الأكلة</label>
+            <input type="text" id="custom_name" placeholder="مثال: جبنة قريش" />
+          </div>
+          <div class="cf-field cf-full">
+            <label for="custom_grams">الوزن المأكول (غ)</label>
+            <input type="number" id="custom_grams" placeholder="100" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_cal">سعرات / 100غ</label>
+            <input type="number" id="custom_cal" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_pro">بروتين / 100غ</label>
+            <input type="number" id="custom_pro" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_carb">كارب / 100غ</label>
+            <input type="number" id="custom_carb" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_fat">دهون / 100غ</label>
+            <input type="number" id="custom_fat" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_fib">ألياف / 100غ</label>
+            <input type="number" id="custom_fib" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_sug">سكريات / 100غ</label>
+            <input type="number" id="custom_sug" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_sat">مشبعة / 100غ</label>
+            <input type="number" id="custom_sat" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
+          <div class="cf-field">
+            <label for="custom_sod">صوديوم مغ / 100غ</label>
+            <input type="number" id="custom_sod" placeholder="0" inputmode="decimal" data-input="update-food-preview" />
+          </div>
         </div>
         <div id="foodPreview" class="preview-pill">النتيجة: 0 سعرة | 0 غ بروتين</div>
-        <button class="btn btn-green" style="width:100%;" data-action="add-food-item">+ إضافة إلى وجبات اليوم</button>
+        <div class="cf-actions">
+          <button class="btn btn-green" data-action="add-food-item">+ إضافة إلى وجبات اليوم</button>
+          <button id="saveMyFoodBtn" class="btn btn-purple" style="display:none;" data-action="save-my-food">⭐ حفظ في أكلاتي</button>
+        </div>
       </div>
 
       <!-- Logged Meals -->

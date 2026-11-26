@@ -84,6 +84,7 @@ export function setCustomFoodMode(on) {
   const btn = document.getElementById("customFoodToggle");
   btn.textContent = customMode ? "↩️ العودة لقائمة الأطعمة" : "✍️ إدخال يدوي لأكلة مخصصة";
   btn.classList.toggle("active", customMode);
+  document.getElementById("saveMyFoodBtn").style.display = customMode ? "" : "none"; // only in manual mode
   updateFoodPreview();
 }
 
@@ -107,7 +108,8 @@ export function updateFoodPreview() {
 
 export function addFoodItem() {
   const sel = currentSelection();
-  if (!sel || sel.amount <= 0) return;
+  if (!sel) return;
+  if (sel.amount <= 0) { showToast(customMode ? "أدخل الوزن المأكول (غ)" : "أدخل الكمية أولاً"); return; } // required here only
   const { f, amount, isDrink } = sel;
   if (customMode && CUSTOM_KEYS.every(k => !(f[k] > 0))) {
     showToast("أدخل قيمة غذائية واحدة على الأقل (مثلاً السعرات)");
@@ -137,10 +139,32 @@ export function addFoodItem() {
   }
   showToast(toast);
 
-  if (customMode) { // clear every manual field so the next entry starts clean
-    ["custom_name", "custom_grams", ...CUSTOM_KEYS.map(k => "custom_" + k)].forEach(id => { document.getElementById(id).value = ""; });
-    updateFoodPreview();
-  }
+  if (customMode) clearCustomFields();
+}
+
+/** Clears every manual field so the next entry starts clean. */
+function clearCustomFields() {
+  ["custom_name", "custom_grams", ...CUSTOM_KEYS.map(k => "custom_" + k)].forEach(id => { document.getElementById(id).value = ""; });
+  updateFoodPreview();
+}
+
+/**
+ * "⭐ حفظ في أكلاتي": stores the product card (values per 100 g) only. The eaten weight is optional
+ * here, and nothing is added to today's meals or totals.
+ */
+export function saveCustomFoodToMyFoods() {
+  if (!customMode) return;
+  const typedName = (document.getElementById("custom_name").value || "").trim();
+  if (!typedName) { showToast("اكتب اسم الأكلة أولاً"); document.getElementById("custom_name").focus(); return; }
+  const f = readCustomFood();
+  if (CUSTOM_KEYS.every(k => !(f[k] > 0))) { showToast("أدخل قيمة غذائية واحدة على الأقل (مثلاً السعرات)"); return; }
+  const r = upsertMyFood(Object.assign({ name: typedName }, Object.fromEntries(CUSTOM_KEYS.map(k => [k, f[k]]))));
+  if (!r.saved) return;
+  syncMyFoods(getMyFoods());
+  populateFoodCategories();
+  populateFoodSelect();
+  showToast(r.updated ? `⭐ تم تحديث "${typedName}" في أكلاتي` : `⭐ تم حفظ "${typedName}" في أكلاتي`);
+  clearCustomFields();
 }
 
 export function deleteSelectedMyFood() {

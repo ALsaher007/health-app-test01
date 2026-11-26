@@ -14,7 +14,7 @@ import {
   programEditSetMode, programEditTaskField, saveProgramEdit, saveTodayAsProgram, toggleProgramActive
 } from "./program-manager.js";
 import { changeViewingDate, importBackupJSON, jumpToToday, resetToday, switchDayMode, switchTab } from "./render-all.js";
-import { addExerciseSwap, addFoodItem, addVeggieSwap, addWaterSwap, applySmartSwap, calcOffset, deleteMeal, deleteOffset, deleteSelectedMyFood, openSmartSwaps, populateFoodSelect, populateMealAddSelect, saveNutrGoals, setFoodCategory, toggleCustomFood, updateFoodPreview } from "./render-meals.js";
+import { addExerciseSwap, addFoodItem, addVeggieSwap, addWaterSwap, applySmartSwap, calcOffset, deleteMeal, deleteOffset, deleteSelectedMyFood, openSmartSwaps, populateFoodSelect, populateMealAddSelect, saveCustomFoodToMyFoods, saveNutrGoals, setFoodCategory, toggleCustomFood, updateFoodPreview } from "./render-meals.js";
 import { completeNextStation, resetScheduleTimes, saveEditedTime, saveWaterEdit, scrollToNextStation, toggleSkip, toggleTask } from "./render-tasks.js";
 import { addWater, cancelWaterLock, resetWaterGoal, saveWaterGoal, setQuickWaterVal, startWaterLock } from "./render-water.js";
 import { saveWeightAndGoal } from "./render-weight.js";
@@ -100,6 +100,7 @@ export const CLICK = {
   "switch-day-mode": el => switchDayMode(el.dataset.mode),
   "switch-tab": el => switchTab(el.dataset.tab, el),
   "test-telegram-message": () => testTelegramMessage(),
+  "save-my-food": () => saveCustomFoodToMyFoods(),
   "toggle-custom-food": () => toggleCustomFood(),
   "toggle-skip": el => toggleSkip(el.dataset.id),
   "toggle-task": el => toggleTask(el.dataset.id),
