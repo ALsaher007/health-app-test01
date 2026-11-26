@@ -1,11 +1,13 @@
 // Session-level actions: full render, day rollover, date nav, mode switch, tabs, backup restore, reset.
 import { STORAGE_PREFIX } from "../config.js";
-import { PROGRAMS } from "../data/programs.js";
-import { getActiveProgram, getTaskWater } from "../logic/schedule.js";
+import { getActiveProgram, resetDayProgress } from "../logic/schedule.js";
+import { BODY_PROFILE_KEY, MY_FOODS_KEY, getMyFoods, isValidBodyProfilePayload, isValidMyFoodsPayload } from "../logic/storage.js";
+import { syncMyFoods } from "../data/foods.js";
+import { isValidProgramsPayload, PROGRAMS_KEY, snapshotForMode } from "../logic/programs.js";
 import { syncScheduleToCloud } from "../logic/telegram.js";
 import { currentTodayStr, getTodayDateStr, isViewingToday, reloadState, saveState, setCurrentToday, setViewingDate, state, viewingDateStr } from "../state.js";
 import { renderDateHeader, renderHeaderModes } from "./render-header.js";
-import { renderMeals, renderOffsets } from "./render-meals.js";
+import { populateFoodCategories, populateFoodSelect, renderMeals, renderOffsets } from "./render-meals.js";
 import { renderPrayers } from "./render-prayers.js";
 import { renderWeeklyStats } from "./render-stats.js";
 import { currentNextTaskId, renderNextStationCard, renderTasks } from "./render-tasks.js";
@@ -68,21 +70,14 @@ export function switchDayMode(mode) {
   if (state.dayMode === mode) return;
   if (Object.values(state.tasks).some(Boolean) &&
     !confirm("التبديل رح يصفّر المهام المنجزة والوجبات المرتبطة فيها. متأكد؟")) return;
-  getActiveProgram().tasks.forEach(t => {
-    if (state.tasks[t.id]) state.water = Math.max(0, state.water - getTaskWater(t));
-  });
-  state.tasks = {}; state.skipped = {}; state.completedAt = {};
-  state.meals = state.meals.filter(m => !m.taskId);
-  state.eatEnd = null; state.lockEnd = null; state.lockOwnerTaskId = null;
+  resetDayProgress();
   state.dayMode = mode;
-  state.taskTimes = {};
-  state.manualTimeSet = {};
-  state.snoozeUntil = {};
-  state.alarmFired = {};
+  // new mode comes from the profile this day already runs on (else the active one)
+  state.programSnap = snapshotForMode(mode, state.programSnap && state.programSnap.profileId);
   saveState();
   renderAll(false);
   syncScheduleToCloud();
-  showToast(`تم التبديل إلى: ${PROGRAMS[mode].label}`);
+  showToast(`تم التبديل إلى: ${getActiveProgram().label}`);
 }
 
 export function switchTab(tab, btn) {
@@ -116,10 +111,17 @@ export function importBackupJSON(e) {
       let count = 0;
       Object.keys(data).forEach(k => {
         if (k.startsWith("aburaslan_") && k !== "aburaslan_tg_cfg") {
+          // never overwrite the saved programs with a malformed payload
+          if (k === PROGRAMS_KEY && !isValidProgramsPayload(data[k])) return;
+          if (k === BODY_PROFILE_KEY && !isValidBodyProfilePayload(data[k])) return;
+          if (k === MY_FOODS_KEY && !isValidMyFoodsPayload(data[k])) return;
           localStorage.setItem(k, data[k]);
           count++;
         }
       });
+      syncMyFoods(getMyFoods()); // restored "أكلاتي" goes live
+      populateFoodCategories();
+      populateFoodSelect();
       reloadState();
       renderAll(false);
       showToast(`✅ تمت استعادة ${count} سجل بنجاح`);

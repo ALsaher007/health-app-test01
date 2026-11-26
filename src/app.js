@@ -1,10 +1,12 @@
 // App entry: wires modules together, starts timers, registers the service worker.
 import { checkScheduledAlarms, configureAlarms, unlockAudio, updatePermBanner } from "./logic/alarms.js";
 import { syncScheduleToCloud, updateTelegramBadge } from "./logic/telegram.js";
+import { syncMyFoods } from "./data/foods.js";
+import { getMyFoods } from "./logic/storage.js";
 import { isViewingToday } from "./state.js";
 import { initActions } from "./ui/actions.js";
 import { checkAutoDayRollover, renderAll, switchTab } from "./ui/render-all.js";
-import { configureMeals, openSmartSwaps, populateFoodCategories, populateFoodSelect } from "./ui/render-meals.js";
+import { configureMeals, openSmartSwaps, populateFoodCategories, populateFoodSelect, setCustomFoodMode } from "./ui/render-meals.js";
 import { completeNextStation, renderNextStationCard, renderTasks, toggleTask } from "./ui/render-tasks.js";
 import { addWater, updateLockUI } from "./ui/render-water.js";
 import { showToast } from "./ui/toast.js";
@@ -33,6 +35,7 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 
 updatePermBanner();
 updateTelegramBadge();
+syncMyFoods(getMyFoods());
 populateFoodCategories();
 populateFoodSelect();
 renderAll(true);
@@ -65,6 +68,7 @@ document.addEventListener("keydown", (e) => {
     case "m": // M - فتح حاسبة الطعام
       e.preventDefault();
       switchTab('food', document.querySelector('.nav-btn[data-tab="food"]'));
+      setCustomFoodMode(false); // search lives in the list view
       setTimeout(() => document.getElementById("foodSearch")?.focus(), 100);
       showToast("⌨️ حاسبة الطعام — اكتب للبحث");
       break;

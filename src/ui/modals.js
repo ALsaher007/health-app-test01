@@ -3,14 +3,29 @@
 // render code and read `editing` (a mutable object, so importers can assign to it).
 import { GAS_TEMPLATE } from "../data/gas-template.js";
 import { getActiveProgram, getTaskWater, getTaskMins, minsToHHMM } from "../logic/schedule.js";
-import { getTelegramConfig, getWaterGoal, getNutrGoals, NUTR_GOAL_KEYS } from "../logic/storage.js";
+import { getTelegramConfig, getWaterGoal } from "../logic/storage.js";
 
 export const editing = {
   waterTaskId: null,
   timeTaskId: null,
   mealTaskId: null,
-  tempMealItems: []
+  tempMealItems: [],
+  // program profiles
+  programDraft: null,      // working copy of the template being edited (never the stored one)
+  programEditMode: "gym",
+  pendingApply: null       // { kind: "activate"|"deactivate"|"edit", id }
 };
+
+export function showModal(id) { document.getElementById(id).style.display = "flex"; }
+export function closeProgramManager() { document.getElementById("programManagerModal").style.display = "none"; }
+export function closeProgramEditor() {
+  document.getElementById("programEditModal").style.display = "none";
+  editing.programDraft = null;
+}
+export function closeProgramApply() {
+  document.getElementById("programApplyModal").style.display = "none";
+  editing.pendingApply = null;
+}
 
 export function openWaterEdit(e, taskId) {
   e.stopPropagation();
@@ -65,12 +80,6 @@ export function openWaterGoalEdit() {
 
 export function closeWaterGoalEdit() {
   document.getElementById("waterGoalModal").style.display = "none";
-}
-
-export function openNutrGoals() {
-  const g = getNutrGoals();
-  NUTR_GOAL_KEYS.forEach(k => { document.getElementById("ng_" + k).value = g[k] > 0 ? g[k] : ""; });
-  document.getElementById("nutrGoalsModal").style.display = "flex";
 }
 
 export function closeNutrGoals() {

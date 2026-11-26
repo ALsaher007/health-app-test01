@@ -19,6 +19,17 @@ export function renderNextStationCard() {
     return;
   }
   const tasks = getActiveProgram().tasks;
+  if (tasks.length === 0) {
+    currentNextTaskId = null;
+    card.style.display = "block";
+    document.getElementById("nextStationBadge").textContent = "📋 لا توجد مهام";
+    document.getElementById("nextStationCountdown").textContent = "--";
+    document.getElementById("nextStationTitle").textContent = "لا يوجد برنامج مفعّل لهذا اليوم";
+    document.getElementById("nextStationSub").textContent = "فعّل برنامجاً من شارة البرنامج في أعلى الصفحة.";
+    document.getElementById("nextStationDoneBtn").style.display = "none";
+    document.getElementById("nextStationScrollBtn").style.display = "none";
+    return;
+  }
   const nextTask = tasks.find(t => !state.tasks[t.id] && !(state.skipped && state.skipped[t.id]))
   if (!nextTask) {
     currentNextTaskId = null;
@@ -264,6 +275,9 @@ export function renderTasks() {
   list.innerHTML = "";
   const tasks = getActiveProgram().tasks;
   let doneCount = 0; let skippedCount = 0;
+  if (tasks.length === 0) {
+    list.innerHTML = `<div style="text-align:center; color:var(--muted); font-size:13px; padding:18px 8px;">لا توجد مهام ولا تنبيهات مجدولة — لا يوجد برنامج مفعّل.</div>`;
+  }
 
   tasks.forEach(t => {
     const isDone = !!state.tasks[t.id];

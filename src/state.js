@@ -2,6 +2,7 @@
 // ES module exports are live bindings: importers read the latest value but
 // cannot assign, so every reassignment goes through the setters below.
 import { STORAGE_PREFIX } from "./config.js";
+import { legacySnapshot, snapshotActiveProgram } from "./logic/programs.js";
 
 export function getTodayDateStr() {
   const now = new Date();
@@ -48,18 +49,25 @@ export function createEmptyDayState(dateStr) {
     eatEnd: null,
     lockEnd: null,
     lockOwnerTaskId: null,
-    weight: ""
+    weight: "",
+    programSnap: null // Deep Clone of the active template taken when the day is created
   };
 }
 
 export function loadDayState(dateStr) {
   const raw = localStorage.getItem(STORAGE_PREFIX + dateStr);
   const base = createEmptyDayState(dateStr);
-  if (!raw) return base;
+  // New day: independent deep copy of the currently active template (null = no program active)
+  const fresh = () => { base.programSnap = snapshotActiveProgram(base.dayMode); return base; };
+  if (!raw) return fresh();
   try {
-    return Object.assign(base, JSON.parse(raw));
-  } catch (e) {
+    const saved = JSON.parse(raw);
+    Object.assign(base, saved);
+    // Days saved before program profiles keep the built-in program they ran on
+    if (!("programSnap" in saved)) base.programSnap = legacySnapshot(base.dayMode);
     return base;
+  } catch (e) {
+    return fresh();
   }
 }
 

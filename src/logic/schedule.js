@@ -1,9 +1,11 @@
 // Schedule helpers: active program, per-task time/water/meal lookups, time formatting.
-import { PROGRAMS } from "../data/programs.js";
+import { EMPTY_PROGRAM } from "./programs.js";
 import { state } from "../state.js";
 
 export function getActiveProgram() {
-  return PROGRAMS[state.dayMode] || PROGRAMS.gym;
+  // The day's own deep-cloned program; the master template is never touched from here
+  const snap = state.programSnap;
+  return snap && snap.program ? snap.program : EMPTY_PROGRAM;
 }
 
 export function getTaskWater(taskObj) {
@@ -56,4 +58,22 @@ export function hhmmToMins(str) {
 export function getNowMins() {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
+}
+
+/**
+ * Clears everything tied to the current program's tasks (done/skipped flags, task meals,
+ * water they added, water lock, shifted times, alarm flags). Used when a day's program or
+ * mode changes. Call BEFORE swapping state.programSnap / state.dayMode.
+ */
+export function resetDayProgress() {
+  getActiveProgram().tasks.forEach(t => {
+    if (state.tasks[t.id]) state.water = Math.max(0, state.water - getTaskWater(t));
+  });
+  state.tasks = {}; state.skipped = {}; state.completedAt = {};
+  state.meals = state.meals.filter(m => !m.taskId);
+  state.eatEnd = null; state.lockEnd = null; state.lockOwnerTaskId = null;
+  state.taskTimes = {};
+  state.manualTimeSet = {};
+  state.snoozeUntil = {};
+  state.alarmFired = {};
 }

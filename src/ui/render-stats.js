@@ -1,6 +1,6 @@
 // 7-day adherence stats.
 import { STORAGE_PREFIX } from "../config.js";
-import { PROGRAMS } from "../data/programs.js";
+import { resolveProgramForDay } from "../logic/programs.js";
 import { getWaterGoal } from "../logic/storage.js";
 import { getLocalDateString } from "../state.js";
 
@@ -23,12 +23,12 @@ export function renderWeeklyStats() {
 
     try {
       const s = JSON.parse(raw);
-      const prog = PROGRAMS[s.dayMode] || PROGRAMS.gym;
+      const prog = resolveProgramForDay(s);
       const doneTasksCount = prog.tasks.filter(t => s.tasks && s.tasks[t.id]).length;
       const skippedN = prog.tasks.filter(t => s.skipped && s.skipped[t.id]).length;
       const denom = prog.tasks.length - skippedN;
       const taskPct = denom > 0 ? Math.round((doneTasksCount / denom) * 100) : 0;
-      const waterPct = Math.min(100, Math.round((s.water / getWaterGoal(s.dayMode)) * 100));
+      const waterPct = Math.min(100, Math.round((s.water / getWaterGoal(s.dayMode, prog)) * 100));
       const dayCal = (s.meals || []).reduce((a, b) => a + b.cal, 0);
 
       last7Days.push({ day: dStr.slice(5), cal: dayCal, water: waterPct, task: taskPct });

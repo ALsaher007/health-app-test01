@@ -2,7 +2,8 @@
 import { FARD_PRAYERS, SUNNAH_CONFIRMED, SUNNAH_EXTRA } from "../data/prayers.js";
 import { nutrLine, sumMeals } from "./nutrition.js";
 import { formatMinsArabic, getActiveProgram, getNowMins, getTaskMins, getTaskWater } from "./schedule.js";
-import { getTargetWeight, getWaterGoal } from "./storage.js";
+import { getProgramsStore } from "./programs.js";
+import { BODY_PROFILE_KEY, MY_FOODS_KEY, getBodyProfile, getCalProGoals, getMyFoods, setBodyProfile, setMyFoods, getTargetWeight, getWaterGoal } from "./storage.js";
 import { currentTodayStr, isViewingToday, state, viewingDateStr } from "../state.js";
 import { showToast } from "../ui/toast.js";
 
@@ -71,6 +72,9 @@ export function exportScheduleICS() {
 }
 
 export function exportBackupJSON() {
+  if (localStorage.getItem(BODY_PROFILE_KEY) === null) setBodyProfile(getBodyProfile()); // body measurements (aburaslan_body_profile) are always part of the backup
+  if (localStorage.getItem(MY_FOODS_KEY) === null) setMyFoods(getMyFoods()); // "أكلاتي" (aburaslan_my_foods) is always part of the backup
+  getProgramsStore(); // make sure the saved programs (aburaslan_programs) exist so the dump below includes them
   const dump = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -106,9 +110,9 @@ export function copyDailyReport() {
   const offsetsTxt = offsets.map(o => `- ${o.name}: ${o.cal} سعرة (الساعة ${o.time})`).join("\n") || "- لا يوجد (التزام كامل)";
 
   const skippedTxt = prog.tasks.filter(t => state.skipped && state.skipped[t.id]).map(t => `- ${t.text}`).join("\n") || "- لا يوجد";
-  const report = `تقرير يوم (${viewingDateStr}) — [${prog.label}]:
+  const report = `تقرير يوم (${viewingDateStr}) — [${prog.label}]${state.programSnap ? ` — البرنامج: ${state.programSnap.profileName}` : ""}:
 💧 الماء: ${state.water} / ${getWaterGoal().toLocaleString("en-US")} مل
-🔥 السعرات: ${totalCal} / ${prog.calGoal.toLocaleString("en-US")} سعرة | البروتين: ${totalPro} / ${prog.proGoal} غ
+🔥 السعرات: ${totalCal} / ${getCalProGoals(prog).cal.toLocaleString("en-US")} سعرة | البروتين: ${totalPro} / ${getCalProGoals(prog).pro} غ
 🥗 القيم الغذائية: ${nutrLine(sumMeals(state.meals))}
 ⚖️ الوزن: ${state.weight ? state.weight + " كغ" : "غير مسجّل"} (الهدف: ${getTargetWeight()} كغ)
 🕌 الصلاة: الفروض (${fardDone}/5) | السنن الرواتب والوتر (${rawatibDone}/12)

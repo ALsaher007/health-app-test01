@@ -1,9 +1,9 @@
 // Food calculator, meals list, offsets, swaps.
-import { ALL_FOOD_ITEMS, CUSTOM_FOOD, FOOD_CATEGORIES } from "../data/foods.js";
+import { ALL_FOOD_ITEMS, CUSTOM_FOOD, FOOD_CATEGORIES, syncMyFoods } from "../data/foods.js";
 import { GENERAL_SWAPS, SWAP_RULES } from "../data/swaps.js";
-import { foodNutrFor, normAr, nutrLine, sumMeals } from "../logic/nutrition.js";
+import { foodNutrFor, isBodyProfileComplete, normAr, nutrLine, sumMeals } from "../logic/nutrition.js";
 import { getActiveProgram } from "../logic/schedule.js";
-import { NUTR_GOAL_KEYS, getWaterGoal } from "../logic/storage.js";
+import { NUTR_GOAL_KEYS, deleteMyFood, getBodyProfile, getCalProGoals, getMyFoods, getWaterGoal, upsertMyFood } from "../logic/storage.js";
 import { saveState, state } from "../state.js";
 import { esc } from "./dom.js";
 import { closeNutrGoals } from "./modals.js";
@@ -17,6 +17,9 @@ const hooks = { toggleTask: () => {} };
 export function configureMeals(h) { Object.assign(hooks, h); }
 
 let currentCategory = "basic";
+let customMode = false; // standalone manual-entry mode (not part of any category list)
+
+const CUSTOM_KEYS = ["cal", "pro", "carb", "fat", "fib", "sug", "sat", "sod"];
 
 export function setFoodCategory(cat) {
   currentCategory = cat;
@@ -26,57 +29,129 @@ export function setFoodCategory(cat) {
 
 export function getActiveFoodList() {
   const q = normAr(document.getElementById("foodSearch").value);
-  const list = q
+  return q
     ? ALL_FOOD_ITEMS.filter(f => normAr(f.name).includes(q))
     : (FOOD_CATEGORIES.find(c => c.id === currentCategory) || FOOD_CATEGORIES[0]).items;
-  return [...list, CUSTOM_FOOD];
 }
 
 export function populateFoodSelect() {
   const sel = document.getElementById("foodSelect");
   sel.innerHTML = "";
   const list = getActiveFoodList();
+  if (list.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "لا توجد نتائج";
+    sel.appendChild(opt);
+  }
   list.forEach((f, idx) => {
     const opt = document.createElement("option");
     opt.value = idx;
     const unit = f.category === "drinks" ? "100مل" : "100غ";
-    opt.textContent = f.custom ? f.name : `${f.name} (${f.cal} سعرة / ${unit})`;
+    opt.textContent = `${f.name} (${f.cal} سعرة / ${unit})`;
     sel.appendChild(opt);
   });
   updateFoodPreview();
 }
 
-export function updateFoodPreview() {
+/** Per-100g values typed into the manual-entry fields, shaped like a food item. */
+function readCustomFood() {
+  const f = Object.assign({}, CUSTOM_FOOD);
+  f.name = (document.getElementById("custom_name").value || "").trim() || "أكلة مخصصة";
+  CUSTOM_KEYS.forEach(k => { f[k] = Math.max(0, parseFloat(document.getElementById("custom_" + k).value) || 0); });
+  return f;
+}
+
+function readCustomGrams() {
+  return Math.max(0, parseFloat(document.getElementById("custom_grams").value) || 0);
+}
+
+/** Resolves what is currently being calculated: { f, amount, isDrink } or null. */
+function currentSelection() {
+  if (customMode) return { f: readCustomFood(), amount: readCustomGrams(), isDrink: false };
   const list = getActiveFoodList();
-  const idx = parseInt(document.getElementById("foodSelect").value) || 0;
-  const f = list[idx];
-  const isDrink = f && f.category === "drinks";
-  const grams = parseFloat(document.getElementById("foodGrams").value) || 0;
-  const ml = parseFloat(document.getElementById("foodMl").value) || 0;
-  const amount = isDrink ? ml : grams;
-  if (!f) return;
-  document.getElementById("customMacroInputs").style.display = f.custom ? "grid" : "none";
-  document.getElementById("foodGrams").style.display = isDrink ? "none" : "block";
-  document.getElementById("foodMl").style.display = isDrink ? "block" : "none";
-  document.getElementById("foodPreview").textContent = "النتيجة: " + nutrLine(foodNutrFor(f, amount));
+  const f = list[parseInt(document.getElementById("foodSelect").value) || 0];
+  if (!f) return null;
+  const isDrink = f.category === "drinks";
+  const amount = parseFloat(document.getElementById(isDrink ? "foodMl" : "foodGrams").value) || 0;
+  return { f, amount, isDrink };
+}
+
+export function setCustomFoodMode(on) {
+  customMode = !!on;
+  document.getElementById("foodListPicker").style.display = customMode ? "none" : "block";
+  document.getElementById("customMacroInputs").style.display = customMode ? "grid" : "none";
+  const btn = document.getElementById("customFoodToggle");
+  btn.textContent = customMode ? "↩️ العودة لقائمة الأطعمة" : "✍️ إدخال يدوي لأكلة مخصصة";
+  btn.classList.toggle("active", customMode);
+  updateFoodPreview();
+}
+
+export function toggleCustomFood() {
+  setCustomFoodMode(!customMode);
+  if (customMode) document.getElementById("custom_name").focus();
+}
+
+export function updateFoodPreview() {
+  const preview = document.getElementById("foodPreview");
+  const sel = currentSelection();
+  // small delete button, only while a saved "أكلاتي" food is selected in list mode
+  document.getElementById("myFoodDelRow").style.display = !customMode && sel && sel.f.mine ? "block" : "none";
+  if (!sel) { preview.textContent = "النتيجة: " + nutrLine(foodNutrFor({}, 0)); return; }
+  if (!customMode) {
+    document.getElementById("foodGrams").style.display = sel.isDrink ? "none" : "block";
+    document.getElementById("foodMl").style.display = sel.isDrink ? "block" : "none";
+  }
+  preview.textContent = "النتيجة: " + nutrLine(foodNutrFor(sel.f, sel.amount));
 }
 
 export function addFoodItem() {
-  const list = getActiveFoodList();
-  const idx = parseInt(document.getElementById("foodSelect").value) || 0;
-  const f = list[idx];
-  const isDrink = f && f.category === "drinks";
-  const amount = isDrink ? (parseFloat(document.getElementById("foodMl").value) || 0) : (parseFloat(document.getElementById("foodGrams").value) || 0);
-  if (!f || amount <= 0) return;
+  const sel = currentSelection();
+  if (!sel || sel.amount <= 0) return;
+  const { f, amount, isDrink } = sel;
+  if (customMode && CUSTOM_KEYS.every(k => !(f[k] > 0))) {
+    showToast("أدخل قيمة غذائية واحدة على الأقل (مثلاً السعرات)");
+    return;
+  }
 
   const t = foodNutrFor(f, amount);
-  const label = f.custom ? ((document.getElementById("custom_name").value || "").trim() || "أكلة مخصصة") : f.name;
   const unit = isDrink ? "مل" : "غ";
-  state.meals.push(Object.assign({ name: `${label} (${amount}${unit})` }, t));
+  state.meals.push(Object.assign({ name: `${f.name} (${amount}${unit})` }, t)); // today: the grams actually eaten
   saveState();
   renderMeals();
   renderWeeklyStats();
-  showToast(`تمت الإضافة (+${t.cal} سعرة)`);
+
+  let toast = `تمت الإضافة (+${t.cal} سعرة)`;
+  if (customMode) {
+    // "أكلاتي": the typed values already are per 100 g, whatever the eaten weight was
+    const typedName = (document.getElementById("custom_name").value || "").trim();
+    if (typedName) {
+      const r = upsertMyFood(Object.assign({ name: typedName }, Object.fromEntries(CUSTOM_KEYS.map(k => [k, f[k]]))));
+      syncMyFoods(getMyFoods());
+      populateFoodCategories();
+      populateFoodSelect();
+      toast += r.updated ? " • حُدّثت في أكلاتي (لكل 100غ)" : " • حُفظت في أكلاتي (لكل 100غ)";
+    } else {
+      toast += " • اكتب اسماً لتُحفظ في أكلاتي";
+    }
+  }
+  showToast(toast);
+
+  if (customMode) { // clear every manual field so the next entry starts clean
+    ["custom_name", "custom_grams", ...CUSTOM_KEYS.map(k => "custom_" + k)].forEach(id => { document.getElementById(id).value = ""; });
+    updateFoodPreview();
+  }
+}
+
+export function deleteSelectedMyFood() {
+  const sel = currentSelection();
+  if (!sel || !sel.f.mine) return;
+  if (!confirm(`حذف «${sel.f.name}» من أكلاتي؟`)) return;
+  deleteMyFood(sel.f.name);
+  syncMyFoods(getMyFoods());
+  populateFoodCategories();
+  populateFoodSelect();
+  showToast("🗑️ تم حذف الأكلة من أكلاتي");
 }
 
 export function populateFoodCategories() {
@@ -148,9 +223,9 @@ export function renderMeals() {
   }
 
   const prog = getActiveProgram();
-  const goal = prog.calGoal;
+  const { cal: goal, pro: proGoal } = getCalProGoals(prog); // body-based goals when set, else the program's
   document.getElementById("calGoalLabel").textContent = goal.toLocaleString("en-US");
-  document.getElementById("proGoalLabel").textContent = prog.proGoal;
+  document.getElementById("proGoalLabel").textContent = proGoal;
   document.getElementById("calVal").textContent = totalCal.toLocaleString("en-US");
   document.getElementById("calRem").textContent = (goal - totalCal).toLocaleString("en-US");
   document.getElementById("proVal").textContent = Math.round(totalPro) + " غ";
@@ -162,6 +237,12 @@ export function renderMeals() {
 }
 
 export function saveNutrGoals() {
+  if (isBodyProfileComplete(getBodyProfile())) { // goals are saved live from the body profile
+    closeNutrGoals();
+    renderMeals();
+    showToast("✅ أهدافك محفوظة تلقائياً من قياساتك");
+    return;
+  }
   const g = {};
   NUTR_GOAL_KEYS.forEach(k => {
     const v = parseFloat(document.getElementById("ng_" + k).value);
@@ -257,7 +338,7 @@ const SWAP_ACTIONS = { addExerciseSwap: "add-exercise-swap", addWaterSwap: "add-
 export function openSmartSwaps() {
   const prog = getActiveProgram();
   const totalCal = state.meals.reduce((a, b) => a + b.cal, 0);
-  const goal = prog.calGoal;
+  const goal = getCalProGoals(prog).cal;
   const over = totalCal - goal;
   if (over <= 0) {
     showToast("أنت ضمن السعرات — لا حاجة لبدائل");

@@ -1,12 +1,12 @@
-const CACHE = "aburaslan-fit-v9"; // keep in sync with CACHE_NAME in src/config.js
+const CACHE = "aburaslan-fit-v13"; // keep in sync with CACHE_NAME in src/config.js
 const SHELL = [
   "./", "./index.html", "./manifest.json",
   // icons are requested with ?v=2, and cache.match() is exact about the query string
   "./icon-192.png?v=2", "./icon-512.png?v=2", "./bell-192.png", "./badge-96.png",
   "./src/app.js", "./src/config.js", "./src/state.js",
   "./src/data/foods.js", "./src/data/gas-template.js", "./src/data/nutrition-constants.js", "./src/data/prayers.js", "./src/data/programs.js", "./src/data/swaps.js",
-  "./src/logic/alarms.js", "./src/logic/nutrition.js", "./src/logic/reports.js", "./src/logic/schedule.js", "./src/logic/storage.js", "./src/logic/telegram.js",
-  "./src/ui/actions.js", "./src/ui/dom.js", "./src/ui/meal-editor.js", "./src/ui/modals.js", "./src/ui/render-all.js", "./src/ui/render-header.js", "./src/ui/render-meals.js", "./src/ui/render-nutrition.js", "./src/ui/render-prayers.js", "./src/ui/render-stats.js", "./src/ui/render-tasks.js", "./src/ui/render-water.js", "./src/ui/render-weight.js", "./src/ui/toast.js"
+  "./src/logic/alarms.js", "./src/logic/nutrition.js", "./src/logic/programs.js", "./src/logic/reports.js", "./src/logic/schedule.js", "./src/logic/storage.js", "./src/logic/telegram.js",
+  "./src/ui/actions.js", "./src/ui/body-goals.js", "./src/ui/dom.js", "./src/ui/meal-editor.js", "./src/ui/modals.js", "./src/ui/program-manager.js", "./src/ui/render-all.js", "./src/ui/render-header.js", "./src/ui/render-meals.js", "./src/ui/render-nutrition.js", "./src/ui/render-prayers.js", "./src/ui/render-stats.js", "./src/ui/render-tasks.js", "./src/ui/render-water.js", "./src/ui/render-weight.js", "./src/ui/toast.js"
 ];
 
 self.addEventListener("install", e => {

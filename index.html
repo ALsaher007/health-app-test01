@@ -57,6 +57,37 @@
       padding: 12px;
     }
 
+
+
+    /* Body-based goals */
+    .bp-title { font-size: 12px; font-weight: 800; color: var(--green); margin: 10px 0 6px; }
+    .bp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+    .bp-hint { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+    .bp-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .bp-summary { font-size: 11px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; line-height: 1.7; }
+
+    /* Program profiles */
+    .program-badge { width: 100%; margin-bottom: 8px; padding: 9px 8px; font-size: 12px; }
+    .pm-row { background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 8px; text-align: right; }
+    .pm-row.pm-active { border-color: var(--green); background: var(--green-dim); }
+    .pm-name { font-weight: 800; font-size: 14px; }
+    .pm-meta, .pm-empty, .pe-label { font-size: 11px; color: var(--muted); }
+    .pm-empty { text-align: center; padding: 12px; }
+    .pm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .pm-btns .btn { padding: 8px 6px; font-size: 12px; }
+    .pm-btns .btn:nth-child(2) { grid-column: span 1; }
+    #programDayNote { font-size: 11px; color: var(--amber); margin-bottom: 8px; text-align: right; display: none; }
+    .pe-task { background: var(--card-2); border: 1px solid var(--border); border-radius: 11px; padding: 8px; margin-bottom: 8px; text-align: right; }
+    .pe-task.pe-meal { border-color: var(--green); }
+    .pe-task-head { display: grid; grid-template-columns: 96px 1fr auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .pe-task-water { font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .pe-task-water input { width: 90px; padding: 5px 8px; }
+    .pe-item { display: grid; grid-template-columns: 1fr 76px auto auto; gap: 6px; align-items: center; font-size: 12px; margin-bottom: 4px; }
+    .pe-item input { padding: 5px 8px; }
+    .pe-add { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .pe-add .btn { grid-column: span 2; padding: 7px; font-size: 12px; }
+    .pe-goals { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+
     /* Top Alerts & Cloud Sync Strip */
     .alert-strip {
       display: grid;
@@ -1320,32 +1351,113 @@
   </div>
 
   <div id="nutrGoalsModal" class="modal-overlay">
-    <div class="modal-card" style="border-color: var(--green); text-align:right;">
+    <div class="modal-card" style="border-color: var(--green); text-align:right; max-width: 480px;">
       <div class="modal-title" style="text-align:center;">أهدافي الغذائية اليومية</div>
-      <div class="modal-desc" style="text-align:center;">اكتب الرقم اللي بدك تلتزم فيه، أو اترك الحقل فاضي بدون هدف.
-        (السعرات والبروتين من البرنامج نفسه.)</div>
-      <div class="form-row-eq">
-        <div><label style="font-size:11px; color:var(--muted);">كارب (غ) - حد أقصى</label><input type="number"
-            id="ng_carb" inputmode="decimal" /></div>
-        <div><label style="font-size:11px; color:var(--muted);">دهون (غ) - حد أقصى</label><input type="number"
-            id="ng_fat" inputmode="decimal" /></div>
+      <div class="modal-desc" style="text-align:center;">أدخل قياساتك مرة واحدة وتُحسب كل الأهداف تلقائياً وتبقى محفوظة. تغيّر الأرقام فوراً عند تعديل أي قياس.</div>
+
+      <div class="bp-title">📏 قياسات جسمي</div>
+      <div class="bp-grid">
+        <div><label class="pe-label">الجنس</label>
+          <select id="bp_sex" data-change="body-field" data-field="sex"><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
+        <div><label class="pe-label">العمر (سنة)</label>
+          <input type="number" id="bp_age" inputmode="numeric" min="10" max="100" data-input="body-field" data-field="age" /></div>
+        <div><label class="pe-label">الطول (سم)</label>
+          <input type="number" id="bp_height" inputmode="decimal" min="100" max="250" data-input="body-field" data-field="height" /></div>
+        <div><label class="pe-label">الوزن الحالي (كغ)</label>
+          <input type="number" id="bp_weight" inputmode="decimal" min="20" step="0.1" data-input="body-field" data-field="weight" /></div>
+        <div><label class="pe-label">محيط الخصر عند السرة (سم)</label>
+          <input type="number" id="bp_waist" inputmode="decimal" data-input="body-field" data-field="waist" /></div>
+        <div><label class="pe-label">محيط الرقبة (سم) — اختياري</label>
+          <input type="number" id="bp_neck" inputmode="decimal" data-input="body-field" data-field="neck" /></div>
+        <div id="bp_hip_row" style="display:none;"><label class="pe-label">محيط الورك (سم) — للإناث</label>
+          <input type="number" id="bp_hip" inputmode="decimal" data-input="body-field" data-field="hip" /></div>
       </div>
-      <div class="form-row-eq">
-        <div><label style="font-size:11px; color:var(--muted);">ألياف (غ) - حد أدنى</label><input type="number"
-            id="ng_fib" inputmode="decimal" /></div>
-        <div><label style="font-size:11px; color:var(--muted);">سكريات (غ) - حد أقصى</label><input type="number"
-            id="ng_sug" inputmode="decimal" /></div>
+      <div class="bp-hint">💡 الخصر: قياس دائري بالمازورة حول البطن بمحاذاة السرة. الرقبة (والورك للإناث) تُستخدم لتقدير نسبة الدهون والكتلة الصافية بمعادلة US Navy.</div>
+      <div class="bp-grid">
+        <div><label class="pe-label">مستوى النشاط اليومي</label>
+          <select id="bp_activity" data-change="body-field" data-field="activity">
+            <option value="sedentary">خامل</option>
+            <option value="light">نشاط خفيف</option>
+            <option value="moderate">متوسط — تمرين 3-4 أيام</option>
+            <option value="high">عالي — تمرين 5-6 أيام</option>
+          </select></div>
+        <div><label class="pe-label">الهدف</label>
+          <select id="bp_goal" data-change="body-field" data-field="goal">
+            <option value="cut">خسارة دهون وتنشيف</option>
+            <option value="maintain">ثبات الوزن</option>
+            <option value="build">بناء عضلي</option>
+          </select></div>
       </div>
-      <div class="form-row-eq">
-        <div><label style="font-size:11px; color:var(--muted);">مشبعة (غ) - حد أقصى</label><input type="number"
-            id="ng_sat" inputmode="decimal" /></div>
-        <div><label style="font-size:11px; color:var(--muted);">صوديوم (مغ) - حد أقصى</label><input type="number"
-            id="ng_sod" inputmode="decimal" /></div>
+
+      <div class="bp-title">🎯 مصدر الأهداف</div>
+      <div class="bp-mode">
+        <button id="bpMode-program" class="mode-btn" data-action="body-set-mode" data-mode="program">مواءمة مع البرنامج النشط</button>
+        <button id="bpMode-full" class="mode-btn" data-action="body-set-mode" data-mode="full">اعتماد أهداف جسمي بالكامل</button>
       </div>
+      <div id="bodySummary" class="bp-summary"></div>
+
+      <div class="bp-title">✏️ الأهداف (قابلة للتعديل يدوياً)</div>
+      <div class="bp-grid">
+        <div><label class="pe-label">سعرات - حد أقصى</label><input type="number" id="ng_cal" inputmode="decimal" data-input="body-goal-input" data-key="cal" /></div>
+        <div><label class="pe-label">بروتين (غ) - حد أدنى</label><input type="number" id="ng_pro" inputmode="decimal" data-input="body-goal-input" data-key="pro" /></div>
+        <div><label class="pe-label">كارب (غ) - حد أقصى</label><input type="number" id="ng_carb" inputmode="decimal" data-input="body-goal-input" data-key="carb" /></div>
+        <div><label class="pe-label">دهون (غ) - حد أقصى</label><input type="number" id="ng_fat" inputmode="decimal" data-input="body-goal-input" data-key="fat" /></div>
+        <div><label class="pe-label">ألياف (غ) - حد أدنى</label><input type="number" id="ng_fib" inputmode="decimal" data-input="body-goal-input" data-key="fib" /></div>
+        <div><label class="pe-label">سكريات (غ) - حد أقصى</label><input type="number" id="ng_sug" inputmode="decimal" data-input="body-goal-input" data-key="sug" /></div>
+        <div><label class="pe-label">مشبعة (غ) - حد أقصى</label><input type="number" id="ng_sat" inputmode="decimal" data-input="body-goal-input" data-key="sat" /></div>
+        <div><label class="pe-label">صوديوم (مغ) - حد أقصى</label><input type="number" id="ng_sod" inputmode="decimal" data-input="body-goal-input" data-key="sod" /></div>
+      </div>
+      <button class="btn btn-blue" style="width:100%; margin:8px 0;" data-action="body-recalc">🔄 إعادة الحساب التلقائي حسب قياساتي</button>
       <div class="btn-grid-2" style="margin-top:6px;">
         <button class="btn btn-green" data-action="save-nutr-goals">حفظ</button>
-        <button class="btn" data-action="close-nutr-goals">إلغاء</button>
+        <button class="btn" data-action="close-nutr-goals">إغلاق</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Program profiles: manager -->
+  <div id="programManagerModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--green); text-align: right; max-width: 480px;">
+      <div class="modal-title" style="text-align:center;">📋 إدارة البرامج الثابتة</div>
+      <div class="modal-desc" style="text-align:center;">كل برنامج قالب أساسي ثابت: تعديلاتك على الشاشة الرئيسية تخص اليوم المعروض فقط، وكل يوم جديد يبدأ بنسخة جديدة من البرنامج المفعّل.</div>
+      <div id="programDayNote"></div>
+      <div id="programListBox"></div>
+      <div style="border-top:1px solid var(--border); padding-top:10px; margin-top:6px;">
+        <label class="pe-label">اسم البرنامج الجديد</label>
+        <input type="text" id="pmNewName" maxlength="40" placeholder="مثلاً: برنامج الكوتش - نوفمبر" style="margin-bottom:6px;" />
+        <select id="pmCreateFrom" style="margin-bottom:6px;"></select>
+        <div class="btn-grid-2" style="margin-bottom:6px;">
+          <button class="btn btn-green" data-action="program-create">➕ إنشاء برنامج ثابت</button>
+          <button class="btn btn-purple" data-action="program-save-today">💾 حفظ تعديلات اليوم كقالب</button>
+        </div>
+      </div>
+      <button class="btn" style="width:100%; margin-top:6px;" data-action="close-program-manager">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- Program profiles: master template editor -->
+  <div id="programEditModal" class="modal-overlay">
+    <div class="modal-card" style="border-color: var(--blue); text-align: right; max-width: 520px;">
+      <div class="modal-title" style="text-align:center;">✏️ تعديل القالب الأساسي</div>
+      <div class="modal-desc" style="text-align:center;">التعديل هنا دائم ويغيّر القالب نفسه.</div>
+      <div id="programEditBody"></div>
+      <div class="btn-grid-2" style="margin-top:10px;">
+        <button class="btn btn-green" data-action="program-save-edit">حفظ القالب</button>
+        <button class="btn" data-action="close-program-edit">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Program profiles: apply to today or from tomorrow -->
+  <div id="programApplyModal" class="modal-overlay" style="z-index: 210;">
+    <div class="modal-card" style="border-color: var(--amber);">
+      <div class="modal-title" id="programApplyTitle">تطبيق البرنامج</div>
+      <div class="modal-desc" id="programApplyDesc" style="white-space: pre-line;"></div>
+      <div class="btn-grid-2" style="margin-bottom:8px;">
+        <button class="btn btn-green" data-action="program-apply-now">اليوم الحالي</button>
+        <button class="btn btn-blue" data-action="program-apply-tomorrow">من الغد فقط</button>
+      </div>
+      <button class="btn" id="programApplyCancel" style="width:100%;" data-action="close-program-apply">إلغاء</button>
     </div>
   </div>
 
@@ -1373,6 +1485,8 @@
           style="font-size:11px; font-weight:800; color:var(--green); background:var(--green-dim); padding:4px 9px; border-radius:999px;">3,250
           مل</span>
       </div>
+
+      <div id="programBadge" class="strip-btn program-badge" data-action="open-program-manager">📋 بدون برنامج مفعّل</div>
 
       <!-- Date History Navigator -->
       <div class="date-nav">
@@ -1511,6 +1625,10 @@
       <div class="card">
         <div class="card-title"><span>⚖️ حاسبة الأكل الإضافي بالغرام (مرتبة أبجدياً)</span></div>
 
+        <button id="customFoodToggle" class="btn btn-purple" style="width:100%; margin-bottom:8px;"
+          data-action="toggle-custom-food">✍️ إدخال يدوي لأكلة مخصصة</button>
+
+        <div id="foodListPicker">
         <div class="form-row-eq">
           <select id="foodCategory" data-change="set-food-category"></select>
           <input type="search" id="foodSearch" placeholder="🔍 ابحث بالاسم" data-input="populate-food-select" />
@@ -1522,8 +1640,15 @@
           <input type="number" id="foodMl" placeholder="الحجم (مل)" value="100" data-input="update-food-preview"
             style="display:none;" />
         </div>
+        <div id="myFoodDelRow" style="display:none; margin-bottom:8px;">
+          <button class="btn btn-red" style="width:100%; padding:6px; font-size:12px;" data-action="delete-my-food">🗑️ حذف
+            هذه الأكلة من أكلاتي</button>
+        </div>
+        </div>
         <div id="customMacroInputs" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
           <input type="text" id="custom_name" placeholder="اسم الأكلة" style="grid-column:1/-1;" />
+          <input type="number" id="custom_grams" placeholder="الوزن المأكول (غ)" inputmode="decimal"
+            data-input="update-food-preview" style="grid-column:1/-1;" />
           <input type="number" id="custom_cal" placeholder="سعرات / 100غ" inputmode="decimal"
             data-input="update-food-preview" />
           <input type="number" id="custom_pro" placeholder="بروتين / 100غ" inputmode="decimal"

@@ -56,7 +56,22 @@ const FRUITS_MORE = [
   mkFood("مانجو", [60, 0.8, 15, 0.4, 1.6, 13.7, 0.1, 1]),
   mkFood("تين شوكي", [41, 0.7, 9.6, 0.5, 3.6, 5.9, 0.1, 5]),
   mkFood("أكدنيا (إسكدنيا)", [47, 0.4, 12.1, 0.2, 1.7, 8.3, 0, 1]),
-  mkFood("جانرك (برقوق أخضر)", [46, 0.7, 11.4, 0.3, 1.4, 9.9, 0, 0])
+  mkFood("جانرك (برقوق أخضر)", [46, 0.7, 11.4, 0.3, 1.4, 9.9, 0, 0]),
+  // per 100 g edible portion (USDA FoodData Central; black grapes estimated from the grape entry)
+  mkFood("يوسفي", { cal: 53, pro: 0.8, carb: 13.3, fat: 0.3, fib: 1.8, sug: 10.6, sat: 0, sod: 2, allergens: [], gi: 42, source: "usda" }),
+  mkFood("تفاح", { cal: 52, pro: 0.3, carb: 13.8, fat: 0.2, fib: 2.4, sug: 10.4, sat: 0, sod: 1, allergens: [], gi: 36, source: "usda" }),
+  mkFood("برتقال", { cal: 47, pro: 0.9, carb: 11.8, fat: 0.1, fib: 2.4, sug: 9.4, sat: 0, sod: 0, allergens: [], gi: 43, source: "usda" }),
+  mkFood("عنب أخضر", { cal: 69, pro: 0.7, carb: 18.1, fat: 0.2, fib: 0.9, sug: 15.5, sat: 0.1, sod: 2, allergens: [], gi: 53, source: "usda" }),
+  mkFood("عنب أسود", { cal: 69, pro: 0.7, carb: 18.1, fat: 0.2, fib: 0.9, sug: 15.5, sat: 0.1, sod: 2, allergens: [], gi: 53, source: "estimated" }),
+  mkFood("إجاص", { cal: 57, pro: 0.4, carb: 15.2, fat: 0.1, fib: 3.1, sug: 9.8, sat: 0, sod: 1, allergens: [], gi: 38, source: "usda" })
+];
+
+const VEGETABLES = [
+  // per 100 g (USDA FoodData Central)
+  mkFood("جزر", { cal: 41, pro: 0.9, carb: 9.6, fat: 0.2, fib: 2.8, sug: 4.7, sat: 0, sod: 69, allergens: [], gi: 35, source: "usda" }),
+  mkFood("خيار", { cal: 15, pro: 0.7, carb: 3.6, fat: 0.1, fib: 0.5, sug: 1.7, sat: 0, sod: 2, allergens: [], gi: 15, source: "usda" }),
+  mkFood("شوندر سكري نيء", { cal: 43, pro: 1.6, carb: 9.6, fat: 0.2, fib: 2.8, sug: 6.8, sat: 0, sod: 78, allergens: [], gi: 64, source: "usda" }),
+  mkFood("شوندر سكري مسلوق", { cal: 44, pro: 1.7, carb: 10, fat: 0.2, fib: 2, sug: 8, sat: 0, sod: 77, allergens: [], gi: 64, source: "usda" })
 ];
 
 const STAPLES = [
@@ -87,7 +102,10 @@ const DAIRY_MORE = [
   mkFood("Taze Kaşar Peyniri - قشقوان طازج", [300, 22, 2.5, 22, 0, 1, 14, 900]),
   mkFood("Mozzarella Peyniri - موتزاريلا", [280, 28, 3.1, 17, 0, 1, 10, 600]),
   mkFood("Light Mozzarella Peyniri - موتزاريلا لايت", [180, 30, 3, 6, 0, 1, 3.5, 500]),
-  mkFood("Kahvaltı Sosu (BIM) - صوص فطور (بيم)", [150, 3, 12, 10, 0.5, 10, 4, 400])
+  mkFood("Kahvaltı Sosu (BIM) - صوص فطور (بيم)", [150, 3, 12, 10, 0.5, 10, 4, 400]),
+  // cottage cheese: USDA creamed, 4% fat. Lor: low-fat Turkish whey cheese, estimated (brands vary)
+  mkFood("جبنة قريش", { cal: 98, pro: 11.1, carb: 3.4, fat: 4.3, fib: 0, sug: 2.7, sat: 1.7, sod: 364, allergens: ["dairy"], gi: 30, source: "usda" }),
+  mkFood("Lor Peyniri - لور (جبنة مصل تركية قليلة الدسم)", { cal: 125, pro: 11, carb: 3.5, fat: 7, fib: 0, sug: 3, sat: 4.5, sod: 250, allergens: ["dairy"], gi: 30, source: "estimated" })
 ];
 
 const NUTS_SEEDS = [
@@ -333,11 +351,16 @@ function byAr(a, b) { return a.name.localeCompare(b.name, "ar"); }
 const BASE_SAVORY = SAVORY_FOODS.filter(x => !x.custom);
 export const CUSTOM_FOOD = SAVORY_FOODS.find(x => x.custom);
 
+// "أكلاتي": the user's saved custom foods (per 100 g). Filled at runtime by syncMyFoods().
+const MY_CATEGORY = { id: "mine", label: "⭐ أكلاتي", items: [] };
+
 export const FOOD_CATEGORIES = [
+  MY_CATEGORY,
   { id: "basic", label: "🍗 أطعمة أساسية", items: [...BASE_SAVORY, ...STAPLES].sort(byAr) },
   { id: "syrian", label: "🥘 أكلات سورية", items: [...SYRIAN_FOODS].sort(byAr) },
   { id: "turkish", label: "🇹🇷 أكلات تركية (مالح فقط)", items: [...TURKISH_SAVORY].sort(byAr) },
   { id: "fruit", label: "🍎 الفواكه", items: [...SWEET_DAIRY_FOODS.filter(f => !DAIRY_HONEY_NAMES.includes(f.name)), ...FRUITS_MORE].sort(byAr) },
+  { id: "vegetables", label: "🥕 الخضار", items: [...VEGETABLES].sort(byAr) },
   { id: "dairy", label: "🥛 ألبان وأجبان وعسل وقشطة", items: [...SWEET_DAIRY_FOODS.filter(f => DAIRY_HONEY_NAMES.includes(f.name)), ...DAIRY_MORE].sort(byAr) },
   { id: "nuts_seeds", label: "🌰 مكسرات وبذور ومنتجات", items: [...NUTS_SEEDS].sort(byAr) },
   { id: "fats_oils", label: "🧈 دهون وزيوت وزبدة", items: [...FATS_OILS].sort(byAr) },
@@ -349,3 +372,25 @@ FOOD_CATEGORIES.forEach(c => c.items.forEach(f => { f.category = c.id; }));
 export const ALL_FOOD_ITEMS = FOOD_CATEGORIES.flatMap(c => c.items).sort(byAr);
 export const FOOD_BY_NAME = {};
 ALL_FOOD_ITEMS.forEach(f => { FOOD_BY_NAME[f.name] = f; });
+
+const MY_KEYS = ["cal", "pro", "carb", "fat", "fib", "sug", "sat", "sod"];
+
+/**
+ * Rebuilds the "أكلاتي" category from saved entries ({name, cal, pro, ... per 100 g}).
+ * Mutates ALL_FOOD_ITEMS / FOOD_BY_NAME / the category in place, so every module that
+ * imported them (calculator, meal editor, program editor) sees the update.
+ * A saved food never shadows a built-in food of the same name in FOOD_BY_NAME.
+ */
+export function syncMyFoods(list) {
+  MY_CATEGORY.items.forEach(f => { if (FOOD_BY_NAME[f.name] === f) delete FOOD_BY_NAME[f.name]; });
+  const rest = ALL_FOOD_ITEMS.filter(f => !f.mine);
+  const items = list.map(x => {
+    const v = { mine: true, category: "mine", allergens: [], source: "custom" };
+    MY_KEYS.forEach(k => { v[k] = x[k] || 0; });
+    return mkFood(x.name, v);
+  }).sort(byAr);
+  MY_CATEGORY.items.splice(0, MY_CATEGORY.items.length, ...items);
+  ALL_FOOD_ITEMS.splice(0, ALL_FOOD_ITEMS.length, ...rest, ...items);
+  ALL_FOOD_ITEMS.sort(byAr);
+  items.forEach(f => { if (!FOOD_BY_NAME[f.name]) FOOD_BY_NAME[f.name] = f; });
+}

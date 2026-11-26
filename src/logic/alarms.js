@@ -151,6 +151,17 @@ export function snoozeAlarm5() {
   showToast("💤 غفوة 5 دقائق — رح يرجع يرن");
 }
 
+/**
+ * Active program changed (activated / deactivated / edited and applied to today):
+ * a ringing alarm and its snooze/fired flags belonged to the old task ids, so drop them.
+ * Callers then re-render, refresh the water lock and push the schedule to Telegram.
+ */
+export function resyncAlarmsForProgramChange() {
+  stopRepeatingAlarm();
+  state.snoozeUntil = {};
+  state.alarmFired = {};
+}
+
 export function dismissLockAlarm() {
   stopRepeatingAlarm();
 }

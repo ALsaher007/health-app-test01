@@ -1,6 +1,8 @@
 // Weight entry, target and SVG chart.
-import { getTargetWeight, getWeightHistory } from "../logic/storage.js";
-import { saveState, state, viewingDateStr } from "../state.js";
+import { sumMeals } from "../logic/nutrition.js";
+import { getTargetWeight, getWeightHistory, syncBodyWeight } from "../logic/storage.js";
+import { isViewingToday, saveState, state, viewingDateStr } from "../state.js";
+import { renderNutritionCard } from "./render-nutrition.js";
 import { showToast } from "./toast.js";
 
 export function saveWeightAndGoal() {
@@ -22,6 +24,8 @@ export function saveWeightAndGoal() {
     else hist.push({ date: viewingDateStr, weight: w });
     hist.sort((a, b) => a.date.localeCompare(b.date));
     localStorage.setItem("aburaslan_weight_history", JSON.stringify(hist));
+    // a new weigh-in today recalculates the body-based goals (cards update at once)
+    if (isViewingToday() && syncBodyWeight(w)) renderNutritionCard(sumMeals(state.meals));
   }
 
   renderWeight();
