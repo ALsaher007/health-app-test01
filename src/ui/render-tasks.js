@@ -94,7 +94,7 @@ export function scrollToNextStation() {
   }
 }
 
-export function shiftTaskAndFollowing(taskId, newMins, isManual = false) {
+export function shiftTaskAndFollowing(taskId, newMins, isManual = false, sync = true) {
   const tasks = getActiveProgram().tasks;
   const idx = tasks.findIndex(t => t.id === taskId);
   if (idx === -1) return;
@@ -117,7 +117,7 @@ export function shiftTaskAndFollowing(taskId, newMins, isManual = false) {
   saveState();
   renderTasks();
   renderNextStationCard();
-  syncScheduleToCloud();
+  if (sync) syncScheduleToCloud();
   if (delta > 0) showToast(`تم تزحيف باقي البرنامج +${delta} دقيقة`);
   else if (delta < 0) showToast(`تم تقديم باقي البرنامج ${Math.abs(delta)} دقيقة`);
 }
@@ -142,15 +142,16 @@ export function saveEditedTime() {
   if (val) {
     const newMins = hhmmToMins(val);
     state.manualTimeSet[editing.timeTaskId] = true;
-    shiftTaskAndFollowing(editing.timeTaskId, newMins, true);
-    syncScheduleToCloud(false, true);
+    shiftTaskAndFollowing(editing.timeTaskId, newMins, true, false); // single sync below, after the lock is re-applied
 
     const t = getActiveProgram().tasks.find(x => x.id === editing.timeTaskId);
     if (t && t.lock && state.tasks[editing.timeTaskId]) {
       state.lockOwnerTaskId = editing.timeTaskId;
       applySmartWaterLock(editing.timeTaskId, t.eatMins || 0, t.lock, true);
     }
-    showToast(`تم تثبيت الوقت على ${formatMinsArabic(newMins)}`);
+    // background push of the effective schedule (only when Telegram is fully configured)
+    const synced = syncScheduleToCloud(false, true);
+    showToast(`تم تثبيت الوقت على ${formatMinsArabic(newMins)}${synced ? " • ✈️ تم تحديث مواعيد تيليغرام" : ""}`);
   }
   closeTimeEdit();
 }
@@ -172,7 +173,8 @@ export function saveWaterEdit() {
   renderTasks();
   renderNextStationCard();
   closeWaterEdit();
-  showToast(`تم تحديث كمية الماء إلى ${newVal} مل`);
+  const synced = syncScheduleToCloud(false, true); // the water amount is part of the Telegram message text
+  showToast(`تم تحديث كمية الماء إلى ${newVal} مل${synced ? " • ✈️ تم تحديث مواعيد تيليغرام" : ""}`);
 }
 
 export function toggleTask(id, forceDone = null) {

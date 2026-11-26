@@ -77,3 +77,32 @@ export function resetDayProgress() {
   state.snoozeUntil = {};
   state.alarmFired = {};
 }
+
+/**
+ * The real schedule of the day on screen: program tasks (the day's own clone) with this day's
+ * manual / shifted times and water amounts merged in. Local alarms and the Telegram payload
+ * both read this, so they can never disagree.
+ */
+export function getEffectiveSchedule() {
+  return getActiveProgram().tasks.map(t => ({
+    id: t.id,
+    text: t.text,
+    mins: getTaskMins(t.id),
+    water: getTaskWater(t),
+    isMeal: !!t.defaultItems,
+    done: !!state.tasks[t.id],
+    skipped: !!(state.skipped && state.skipped[t.id])
+  }));
+}
+
+/** Pending "water door opens" alarm of today's water lock as a schedule entry (null when none). */
+export function getLockAlarmEntry(nowMs = Date.now()) {
+  if (!state.lockEnd || state.lockEnd <= nowMs) return null;
+  const end = new Date(state.lockEnd);
+  if (end.toDateString() !== new Date(nowMs).toDateString()) return null; // the cloud schedule is per day
+  return {
+    id: "lock_" + (state.lockOwnerTaskId || "water"),
+    mins: end.getHours() * 60 + end.getMinutes(),
+    text: "💧 انفتح باب المي — تقدر تشرب الآن"
+  };
+}

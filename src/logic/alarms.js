@@ -1,7 +1,7 @@
 // Alarms: audio chime, repeating alarm modal, system notifications, scheduled checks.
 import { state, saveState, isViewingToday } from "../state.js";
 import { showToast } from "../ui/toast.js";
-import { getActiveProgram, getTaskMins, formatMinsArabic, getNowMins } from "./schedule.js";
+import { getActiveProgram, getEffectiveSchedule, getTaskMins, formatMinsArabic, getNowMins } from "./schedule.js";
 
 let audioCtx = null;
 let alarmInterval = null;
@@ -170,10 +170,10 @@ export function checkScheduledAlarms() {
   if (!isViewingToday()) return;
   const now = Date.now();
   const nowMins = getNowMins();
-  const tasks = getActiveProgram().tasks;
 
-  for (const t of tasks) {
-    if (state.tasks[t.id] || (state.skipped && state.skipped[t.id])) continue;
+  // same effective schedule (manual/shifted times merged in) that is pushed to Telegram
+  for (const t of getEffectiveSchedule()) {
+    if (t.done || t.skipped) continue;
 
     if (state.snoozeUntil[t.id]) {
       if (now >= state.snoozeUntil[t.id]) {
@@ -185,7 +185,7 @@ export function checkScheduledAlarms() {
       continue;
     }
 
-    const schedMins = getTaskMins(t.id);
+    const schedMins = t.mins;
     if (!state.alarmFired[t.id] && nowMins >= schedMins && (nowMins - schedMins) <= 5) {
       state.alarmFired[t.id] = true;
       saveState();
